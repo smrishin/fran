@@ -17,143 +17,196 @@ export type Activity = {
 
 export type ItineraryDay = {
   day: number;
-  date?: string;
+  date: string;
   destination: string;
   tone: "coral" | "lake" | "pine" | "sun";
   activities: Activity[];
   placeholder?: boolean;
 };
 
+export type FlightLeg = {
+  date?: string;
+  origin?: string;
+  destination?: string;
+  departTime?: string;
+  arriveTime?: string;
+  airline?: string;
+  flightNumber?: string;
+  duration?: string;
+  stops?: string;
+};
+
 export type Guest = {
   id: string;
   name: string;
   initials: string;
-  arrival: {
-    date?: string;
-    time?: string;
-    location?: string;
-    airline?: string;
-    flightNumber?: string;
-  };
-  departure: {
-    date?: string;
-    time?: string;
-    location?: string;
-    airline?: string;
-    flightNumber?: string;
-  };
+  status: "Host" | "Local" | "Flight confirmed" | "Flight pending";
+  homeBase: string;
+  arrival: FlightLeg;
+  departure: FlightLeg;
   notes?: string;
-  placeholder?: boolean;
 };
 
 export const trip = {
   workingName: "Fog & Fire",
   tagline: "California · ’26 · One wild week",
-  dates: { start: undefined, end: undefined } as { start?: string; end?: string },
-  locations: ["San Francisco", "Lake Tahoe", "Santa Cruz", "Sunnyvale"],
+  dates: { start: "2026-10-24", end: "2026-11-01" },
+  locations: ["Big Sur", "Santa Cruz", "Lake Tahoe", "San Francisco", "Sunnyvale"],
   calendar: {
     source: "iCloud public calendar",
     apiPath: "/api/calendar",
   },
 };
 
-// These days use only themes supplied in the brief. Every item remains a
-// clearly labeled planning placeholder until confirmed trip details arrive.
+const openPlan = (id: string, title: string, location: string): Activity => ({
+  id,
+  title,
+  startTime: "TBD",
+  duration: "TBD",
+  location,
+  cost: { kind: "tbd" },
+  notes: "Add confirmed activities from the shared calendar.",
+  placeholder: true,
+});
+
 export const itinerary: ItineraryDay[] = [
-  {
-    day: 1,
-    destination: "San Francisco",
-    tone: "coral",
-    placeholder: true,
-    activities: [
-      { id: "d1-a1", title: "Airport pickups", startTime: "TBD", duration: "TBD", location: "Airport TBD", cost: { kind: "tbd" }, placeholder: true },
-      { id: "d1-a2", title: "Welcome dinner", startTime: "TBD", duration: "TBD", location: "San Francisco · TBD", cost: { kind: "tbd" }, placeholder: true },
-    ],
-  },
-  {
-    day: 2,
-    destination: "Lake Tahoe",
-    tone: "lake",
-    placeholder: true,
-    activities: [
-      { id: "d2-a1", title: "Drive to Tahoe", startTime: "TBD", duration: "TBD", location: "Route TBD", cost: { kind: "tbd" }, placeholder: true },
-      { id: "d2-a2", title: "Boating", startTime: "TBD", duration: "TBD", location: "Lake Tahoe · TBD", cost: { kind: "tbd" }, placeholder: true },
-      { id: "d2-a3", title: "Camp setup", startTime: "TBD", duration: "TBD", location: "Campsite TBD", cost: { kind: "tbd" }, placeholder: true },
-    ],
-  },
-  {
-    day: 3,
-    destination: "Lake Tahoe",
-    tone: "pine",
-    placeholder: true,
-    activities: [
-      { id: "d3-a1", title: "Open planning block", startTime: "TBD", duration: "TBD", location: "Lake Tahoe", cost: { kind: "tbd" }, notes: "Add confirmed activities later.", placeholder: true },
-    ],
-  },
-  {
-    day: 4,
-    destination: "Santa Cruz",
-    tone: "sun",
-    placeholder: true,
-    activities: [
-      { id: "d4-a1", title: "Santa Cruz day", startTime: "TBD", duration: "TBD", location: "Santa Cruz · TBD", cost: { kind: "tbd" }, placeholder: true },
-    ],
-  },
-  {
-    day: 5,
-    destination: "San Francisco",
-    tone: "coral",
-    placeholder: true,
-    activities: [
-      { id: "d5-a1", title: "Alcatraz", startTime: "TBD", duration: "TBD", location: "San Francisco", cost: { kind: "tbd" }, placeholder: true },
-    ],
-  },
-  {
-    day: 6,
-    destination: "Sunnyvale",
-    tone: "lake",
-    placeholder: true,
-    activities: [
-      { id: "d6-a1", title: "Sunnyvale plans", startTime: "TBD", duration: "TBD", location: "Sunnyvale · TBD", cost: { kind: "tbd" }, placeholder: true },
-    ],
-  },
-  {
-    day: 7,
-    destination: "Halloween",
-    tone: "pine",
-    placeholder: true,
-    activities: [
-      { id: "d7-a1", title: "Halloween plans", startTime: "TBD", duration: "TBD", location: "TBD", cost: { kind: "tbd" }, placeholder: true },
-    ],
-  },
+  { day: 1, date: "2026-10-24", destination: "Assemble", tone: "coral", activities: [openPlan("d1-a1", "The crew assembles", "San Francisco area · TBD")] },
+  { day: 2, date: "2026-10-25", destination: "Big Sur", tone: "sun", activities: [openPlan("d2-a1", "Big Sur day", "Big Sur")] },
+  { day: 3, date: "2026-10-26", destination: "Santa Cruz", tone: "coral", activities: [openPlan("d3-a1", "Santa Cruz day", "Santa Cruz")] },
+  { day: 4, date: "2026-10-27", destination: "Lake Tahoe", tone: "lake", activities: [openPlan("d4-a1", "Lake Tahoe · day one", "Lake Tahoe")] },
+  { day: 5, date: "2026-10-28", destination: "Lake Tahoe", tone: "pine", activities: [openPlan("d5-a1", "Lake Tahoe · day two", "Lake Tahoe")] },
+  { day: 6, date: "2026-10-29", destination: "San Francisco", tone: "coral", activities: [openPlan("d6-a1", "San Francisco day", "San Francisco")] },
+  { day: 7, date: "2026-10-30", destination: "Sunnyvale", tone: "lake", activities: [openPlan("d7-a1", "Sunnyvale day", "Sunnyvale")] },
+  { day: 8, date: "2026-10-31", destination: "Halloween", tone: "pine", activities: [openPlan("d8-a1", "Halloween", "Location TBD")] },
+  { day: 9, date: "2026-11-01", destination: "Disassemble", tone: "sun", activities: [openPlan("d9-a1", "The crew disassembles", "San Francisco area · TBD")] },
 ];
 
 export const guests: Guest[] = [
   {
-    id: "guest-01",
-    name: "Traveler 01",
-    initials: "01",
-    arrival: {},
-    departure: {},
-    notes: "Replace with confirmed traveler details.",
-    placeholder: true,
+    id: "hrishikesh",
+    name: "Hrishikesh",
+    initials: "HR",
+    status: "Local",
+    homeBase: "San Francisco, California",
+    arrival: { date: "2026-10-23", destination: "San Francisco", arriveTime: "12:00 PM" },
+    departure: { date: "2026-11-03", origin: "San Francisco", departTime: "12:00 PM" },
+    notes: "Staying in San Francisco.",
   },
   {
-    id: "guest-02",
-    name: "Traveler 02",
-    initials: "02",
+    id: "harshith",
+    name: "Harshith",
+    initials: "HA",
+    status: "Host",
+    homeBase: "Bay Area, California",
     arrival: {},
     departure: {},
-    notes: "Replace with confirmed traveler details.",
-    placeholder: true,
+    notes: "Host · No flight details needed.",
   },
   {
-    id: "guest-03",
-    name: "Traveler 03",
-    initials: "03",
+    id: "deepa",
+    name: "Deepa",
+    initials: "DE",
+    status: "Host",
+    homeBase: "Bay Area, California",
     arrival: {},
     departure: {},
-    notes: "Add or remove cards as the guest list is confirmed.",
-    placeholder: true,
+    notes: "Host · No flight details needed.",
+  },
+  {
+    id: "sourav",
+    name: "Sourav",
+    initials: "SO",
+    status: "Flight confirmed",
+    homeBase: "Tampa, Florida",
+    arrival: {
+      date: "2026-10-23",
+      origin: "TPA",
+      destination: "SFO",
+      departTime: "4:50 PM",
+      arriveTime: "9:05 PM",
+      airline: "Southwest Airlines",
+      flightNumber: "WN 3074",
+      duration: "7h 15m",
+      stops: "1 stop · SAN",
+    },
+    departure: {
+      date: "2026-11-03",
+      origin: "SFO",
+      destination: "TPA",
+      departTime: "1:20 PM",
+      arriveTime: "11:55 PM",
+      airline: "Southwest Airlines",
+      flightNumber: "WN 1652",
+      duration: "7h 35m",
+      stops: "1 stop · DEN",
+    },
+  },
+  {
+    id: "ashwin",
+    name: "Ashwin",
+    initials: "AS",
+    status: "Flight confirmed",
+    homeBase: "Cincinnati, Ohio",
+    arrival: {
+      date: "2026-10-24",
+      origin: "CVG",
+      destination: "SFO",
+      departTime: "9:05 AM",
+      arriveTime: "1:40 PM",
+      airline: "Southwest Airlines",
+      flightNumber: "WN 1291 · WN 4367",
+      duration: "7h 35m",
+      stops: "1 stop · MDW",
+    },
+    departure: {
+      date: "2026-11-01",
+      origin: "SFO",
+      destination: "CVG",
+      departTime: "9:05 AM",
+      arriveTime: "7:35 PM",
+      airline: "Southwest Airlines",
+      flightNumber: "WN 4357 · WN 878",
+      duration: "7h 30m",
+      stops: "1 stop · AUS",
+    },
+  },
+  {
+    id: "nirosha",
+    name: "Nirosha",
+    initials: "NI",
+    status: "Flight confirmed",
+    homeBase: "Cincinnati, Ohio",
+    arrival: {
+      date: "2026-10-24",
+      origin: "CVG",
+      destination: "SFO",
+      departTime: "9:05 AM",
+      arriveTime: "1:40 PM",
+      airline: "Southwest Airlines",
+      flightNumber: "WN 1291 · WN 4367",
+      duration: "7h 35m",
+      stops: "1 stop · MDW",
+    },
+    departure: {
+      date: "2026-11-01",
+      origin: "SFO",
+      destination: "CVG",
+      departTime: "9:05 AM",
+      arriveTime: "7:35 PM",
+      airline: "Southwest Airlines",
+      flightNumber: "WN 4357 · WN 878",
+      duration: "7h 30m",
+      stops: "1 stop · AUS",
+    },
+  },
+  {
+    id: "sanjay-krishna",
+    name: "Sanjay Krishna",
+    initials: "SK",
+    status: "Flight pending",
+    homeBase: "Columbus, Indiana",
+    arrival: {},
+    departure: {},
+    notes: "Flight details awaiting confirmation.",
   },
 ];

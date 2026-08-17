@@ -1,6 +1,12 @@
 import { parseIcs } from "../../../lib/ics";
+import { ACCESS_COOKIE_NAME, readCookie, verifyAccessToken } from "../../../lib/access";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const accessToken = readCookie(request.headers.get("cookie"), ACCESS_COOKIE_NAME);
+  if (!await verifyAccessToken(accessToken)) {
+    return Response.json({ configured: false, events: [], message: "Campfire Code required." }, { status: 401 });
+  }
+
   const configuredUrl = process.env.TRIP_CALENDAR_ICS_URL;
 
   if (!configuredUrl) {

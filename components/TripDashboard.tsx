@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { guests, itinerary, trip, type Activity, type Cost } from "../data/trip";
+import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type Guest } from "../data/trip";
 import type { CalendarEvent } from "../lib/ics";
 
 type Section = "home" | "itinerary" | "calendar" | "guests";
@@ -25,10 +25,6 @@ function Logo() {
       <i />
     </span>
   );
-}
-
-function PlaceholderTag({ children = "Planning placeholder" }: { children?: React.ReactNode }) {
-  return <span className="placeholder-tag"><i />{children}</span>;
 }
 
 function costLabel(cost: Cost) {
@@ -69,6 +65,23 @@ function formatEventTime(value: string, allDay: boolean) {
   return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(date);
 }
 
+function formatTripDate(value?: string) {
+  if (!value) return "Date TBD";
+  const date = new Date(`${value}T12:00:00`);
+  return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(date);
+}
+
+function Countdown() {
+  const [days, setDays] = useState<number | null>(null);
+
+  useEffect(() => {
+    const start = new Date(`${trip.dates.start}T00:00:00-07:00`).getTime();
+    queueMicrotask(() => setDays(Math.max(0, Math.ceil((start - Date.now()) / 86_400_000))));
+  }, []);
+
+  return <strong>{days === null ? "—" : `${days} days`}</strong>;
+}
+
 function AppHeader({ section, onNavigate }: { section: Section; onNavigate: (section: Section) => void }) {
   return (
     <>
@@ -83,7 +96,7 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: (sec
           ))}
         </nav>
         <button className="avatar-stack" onClick={() => onNavigate("guests")} aria-label="View travelers">
-          <span>01</span><span>02</span><b>The crew</b>
+          <span>HR</span><span>HA</span><b>7 travelers</b>
         </button>
       </header>
       <nav className="mobile-nav" aria-label="Mobile navigation">
@@ -98,23 +111,23 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: (sec
 }
 
 function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
-  const weekStops = ["San Francisco", "Lake Tahoe", "Santa Cruz", "Sunnyvale"];
+  const weekStops = ["Big Sur", "Santa Cruz", "Lake Tahoe", "San Francisco", "Sunnyvale"];
 
   return (
     <>
       <section className="hero page-enter">
         <div className="hero-copy">
-          <p className="eyebrow">THE GOLDEN STATE · 7 DAYS</p>
+          <p className="eyebrow">OCT 24 — NOV 01 · CALIFORNIA ’26</p>
           <h1>City lights.<br/><em>Wild nights.</em></h1>
-          <p className="intro">One week from the Bay to the lake, down the coast, and everywhere worth remembering in between.</p>
+          <p className="intro">Nine days from Big Sur to Tahoe, through the Bay, and everywhere worth remembering in between.</p>
           <div className="hero-actions">
             <button className="primary-button" onClick={() => onNavigate("itinerary")}>Explore the week <span>→</span></button>
-            <PlaceholderTag>Dates coming soon</PlaceholderTag>
+            <span className="confirmed-tag"><i /> Dates locked</span>
           </div>
         </div>
 
         <div className="route-card" aria-label="Trip route concept">
-          <div className="route-card-top"><span>THE ROUTE</span><b>01 — 07</b></div>
+          <div className="route-card-top"><span>THE ROUTE</span><b>01 — 09</b></div>
           <div className="route-map">
             <div className="sun" />
             <div className="mountains"><i/><i/><i/></div>
@@ -123,20 +136,20 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
               <div className={`route-stop stop-${index + 1}`} key={stop}><span>{index + 1}</span><b>{stop}</b></div>
             ))}
           </div>
-          <div className="route-card-bottom"><span>↓ PACIFIC COAST</span><span>OCTOBER · CALIFORNIA</span></div>
+          <div className="route-card-bottom"><span>↓ PACIFIC COAST</span><span>OCT 24 — NOV 01</span></div>
         </div>
       </section>
 
       <section className="quick-strip" aria-label="Trip overview">
-        <div><small>COUNTDOWN</small><strong>—</strong><p>Add trip dates to start</p></div>
-        <div><small>FIRST STOP</small><strong>San Francisco</strong><p>Arrival plan · Details pending</p></div>
-        <div><small>TRIP LENGTH</small><strong>7 days</strong><p>Four California stops</p></div>
-        <div><small>THE CREW</small><strong>Friends</strong><p>Guest list coming soon</p></div>
+        <div><small>COUNTDOWN</small><Countdown /><p>Until assemble day</p></div>
+        <div><small>FIRST DAY</small><strong>Assemble</strong><p>Saturday · October 24</p></div>
+        <div><small>TRIP LENGTH</small><strong>9 days</strong><p>October 24 — November 1</p></div>
+        <div><small>THE CREW</small><strong>7 travelers</strong><p>Two hosts · Five guests</p></div>
       </section>
 
       <section className="home-grid section-shell">
         <div className="week-peek panel-dark">
-          <div className="panel-heading"><div><p className="eyebrow light">THE WEEK</p><h2>Seven days.<br/><em>Zero ordinary.</em></h2></div><button onClick={() => onNavigate("itinerary")}>Full plan →</button></div>
+          <div className="panel-heading"><div><p className="eyebrow light">THE ADVENTURE</p><h2>Nine days.<br/><em>Zero ordinary.</em></h2></div><button onClick={() => onNavigate("itinerary")}>Full plan →</button></div>
           <div className="mini-days">
             {itinerary.map((day) => (
               <button key={day.day} onClick={() => onNavigate("itinerary")}>
@@ -149,23 +162,23 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
         <div className="next-card panel-paper">
           <div className="card-kicker"><span className="pulse" /> NEXT PLANNED</div>
           <div className="big-number">01</div>
-          <h3>Arrival day</h3>
-          <p>San Francisco</p>
+          <h3>Assemble</h3>
+          <p>Saturday · October 24</p>
           <hr />
-          <dl><div><dt>TIME</dt><dd>TBD</dd></div><div><dt>PLAN</dt><dd>Airport pickups</dd></div></dl>
-          <PlaceholderTag />
+          <dl><div><dt>TIME</dt><dd>TBD</dd></div><div><dt>PLAN</dt><dd>The crew assembles</dd></div></dl>
+          <span className="confirmed-tag"><i /> Day confirmed</span>
         </div>
 
         <div className="trip-shape panel-paper">
           <div className="card-kicker">TRIP SHAPE</div>
-          <h3>Bay → Lake → Coast</h3>
-          <p>The current structure uses only the places and themes in your brief. Nothing here is confirmed yet.</p>
+          <h3>Coast → Lake → Bay</h3>
+          <p>The main daily destinations are now confirmed. Times, activities, and costs can fill in as the shared calendar evolves.</p>
           <div className="theme-tags"><span>Boating</span><span>Camping</span><span>Alcatraz</span><span>Halloween</span></div>
         </div>
 
         <div className="calendar-peek panel-lake">
           <div><p className="eyebrow light">LIVE CALENDAR</p><h3>Your iCloud events,<br/>right where the plan lives.</h3></div>
-          <button onClick={() => onNavigate("calendar")}>Connect calendar <span>→</span></button>
+          <button onClick={() => onNavigate("calendar")}>Open calendar <span>→</span></button>
         </div>
       </section>
     </>
@@ -177,15 +190,15 @@ function ItineraryView() {
     <div className="inner-page page-enter">
       <header className="page-title-row section-shell">
         <div><p className="eyebrow">DAY BY DAY</p><h1>The week,<br/><em>mapped out.</em></h1></div>
-        <div className="page-note"><PlaceholderTag /><p>All details below are editable planning placeholders based only on the supplied trip themes.</p></div>
+        <div className="page-note"><span className="confirmed-tag"><i /> Main days confirmed</span><p>Destinations and dates are set. Activity times, costs, and meeting points remain open for planning.</p></div>
       </header>
       <section className="itinerary-list section-shell">
         {itinerary.map((day) => (
           <article className={`day-block tone-${day.tone}`} key={day.day}>
             <header>
               <div className="day-number"><small>DAY</small><strong>{String(day.day).padStart(2, "0")}</strong></div>
-              <div className="day-destination"><small>{day.date ?? "DATE TBD"}</small><h2>{day.destination}</h2></div>
-              <span className="day-status">DRAFT</span>
+              <div className="day-destination"><small>{formatTripDate(day.date)}</small><h2>{day.destination}</h2></div>
+              <span className="day-status">DATE SET</span>
             </header>
             <div className="activity-list">
               {day.activities.map((activity) => <ActivityCard activity={activity} key={activity.id} />)}
@@ -251,15 +264,26 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
         </div>
 
         <aside className="calendar-connect panel-dark">
-          <p className="eyebrow light">SIMPLEST SETUP</p>
-          <h2>Share once.<br/><em>Stay in sync.</em></h2>
-          <p>Apple’s public calendar link is read-only and lets this dashboard refresh events without asking every friend to sign in.</p>
-          <ol>
-            <li><span>01</span><div><b>Open iCloud Calendar</b><small>Select the dedicated trip calendar.</small></div></li>
-            <li><span>02</span><div><b>Turn on Public Calendar</b><small>Copy the generated sharing link.</small></div></li>
-            <li><span>03</span><div><b>Add the link securely</b><small>Use the calendar environment setting before launch.</small></div></li>
-          </ol>
-          <div className="privacy-note"><b>Good to know</b><p>Anyone with a public iCloud link can read that calendar. Use a trip-only calendar and avoid sensitive details.</p></div>
+          {connected ? (
+            <>
+              <p className="eyebrow light">LIVE FROM ICLOUD</p>
+              <h2>Shared once.<br/><em>Kept in sync.</em></h2>
+              <p>The trip calendar is connected and currently serving {calendar.events.length} events to the private agenda.</p>
+              <div className="calendar-live-count"><strong>{calendar.events.length}</strong><span>LIVE<br/>EVENTS</span></div>
+              <ol>
+                <li><span>01</span><div><b>Edit in Apple Calendar</b><small>Use the existing shared trip calendar.</small></div></li>
+                <li><span>02</span><div><b>Changes refresh on reload</b><small>The server keeps a short five-minute cache.</small></div></li>
+                <li><span>03</span><div><b>Agenda stays protected</b><small>The calendar endpoint requires the Campfire Code cookie.</small></div></li>
+              </ol>
+              <div className="privacy-note"><b>Last checked</b><p>{calendar.syncedAt ? formatEventDate(calendar.syncedAt).full : "During this page visit"}</p></div>
+            </>
+          ) : (
+            <>
+              <p className="eyebrow light">CALENDAR STATUS</p>
+              <h2>Share once.<br/><em>Stay in sync.</em></h2>
+              <p>The iCloud calendar is ready to appear here as soon as its server setting is available.</p>
+            </>
+          )}
         </aside>
       </section>
     </div>
@@ -270,31 +294,53 @@ function Value({ children }: { children?: string }) {
   return <span className={!children ? "tbd-value" : ""}>{children || "TBD"}</span>;
 }
 
+function FlightInfo({ leg, kind, guest }: { leg: FlightLeg; kind: "arrival" | "departure"; guest: Guest }) {
+  const hasTravel = Boolean(leg.date || leg.origin || leg.destination);
+  const isHost = guest.status === "Host";
+
+  return (
+    <div className={`flight-leg ${kind}`}>
+      <div className="leg-title">
+        <span>{kind === "arrival" ? "↓" : "↑"}</span>
+        <div><small>{kind.toUpperCase()}</small><b><Value>{leg.date ? formatTripDate(leg.date) : isHost ? "Host · local" : undefined}</Value></b></div>
+      </div>
+      {hasTravel ? (
+        <>
+          <div className="airport-row">
+            <div><strong><Value>{leg.origin}</Value></strong><small>{leg.departTime ?? "Time TBD"}</small></div>
+            <i />
+            <div className="airport-destination"><strong><Value>{leg.destination}</Value></strong><small>{leg.arriveTime ?? "Time TBD"}</small></div>
+          </div>
+          <div className="flight-meta">
+            <span>AIRLINE <b><Value>{leg.airline}</Value></b></span>
+            <span>FLIGHT <b><Value>{leg.flightNumber}</Value></b></span>
+            <span>DURATION <b><Value>{leg.duration}</Value></b></span>
+            <span>ROUTE <b><Value>{leg.stops}</Value></b></span>
+          </div>
+        </>
+      ) : (
+        <div className="no-flight"><b>{isHost ? "No flight needed" : "Details awaiting"}</b><p>{isHost ? "Already in the Bay Area." : "Add flight details once confirmed."}</p></div>
+      )}
+    </div>
+  );
+}
+
 function GuestsView() {
   return (
     <div className="inner-page page-enter">
       <header className="page-title-row section-shell">
         <div><p className="eyebrow">THE CREW</p><h1>Arrivals,<br/><em>all together.</em></h1></div>
-        <div className="page-note"><PlaceholderTag /><p>Traveler and flight cards are wired to one editable data file. No guest details have been invented.</p></div>
+        <div className="page-note"><span className="confirmed-tag"><i /> 7 travelers</span><p>Hosts, home bases, and all currently confirmed flights are collected here. Booking reference numbers are intentionally excluded.</p></div>
       </header>
       <section className="guest-grid section-shell">
         {guests.map((guest, index) => (
           <article className="guest-card panel-paper" key={guest.id}>
-            <header><div className={`guest-avatar avatar-${index + 1}`}>{guest.initials}</div><div><h2>{guest.name}</h2><PlaceholderTag>Guest placeholder</PlaceholderTag></div></header>
-            <div className="flight-leg">
-              <div className="leg-title"><span>↓</span><div><small>ARRIVAL</small><b><Value>{guest.arrival.date}</Value></b></div></div>
-              <div className="airport-row"><strong><Value>{guest.arrival.location}</Value></strong><i/><strong>{guest.arrival.time || "—:—"}</strong></div>
-              <div className="flight-meta"><span>AIRLINE <b><Value>{guest.arrival.airline}</Value></b></span><span>FLIGHT <b><Value>{guest.arrival.flightNumber}</Value></b></span></div>
-            </div>
-            <div className="flight-leg departure">
-              <div className="leg-title"><span>↑</span><div><small>DEPARTURE</small><b><Value>{guest.departure.date}</Value></b></div></div>
-              <div className="airport-row"><strong><Value>{guest.departure.location}</Value></strong><i/><strong>{guest.departure.time || "—:—"}</strong></div>
-              <div className="flight-meta"><span>AIRLINE <b><Value>{guest.departure.airline}</Value></b></span><span>FLIGHT <b><Value>{guest.departure.flightNumber}</Value></b></span></div>
-            </div>
+            <header><div className={`guest-avatar avatar-${index + 1}`}>{guest.initials}</div><div><h2>{guest.name}</h2><span className={`guest-status status-${guest.status.toLowerCase().replaceAll(" ", "-")}`}>{guest.status}</span><p>{guest.homeBase}</p></div></header>
+            <FlightInfo leg={guest.arrival} kind="arrival" guest={guest} />
+            <FlightInfo leg={guest.departure} kind="departure" guest={guest} />
             {guest.notes && <p className="guest-note">{guest.notes}</p>}
           </article>
         ))}
-        <div className="add-guest-card"><span>+</span><h3>Room for the whole crew</h3><p>Add the confirmed travelers when you’re ready.</p></div>
       </section>
     </div>
   );
@@ -328,7 +374,7 @@ export function TripDashboard() {
       {section === "itinerary" && <ItineraryView />}
       {section === "calendar" && <CalendarView calendar={calendar} />}
       {section === "guests" && <GuestsView />}
-      <footer className="site-footer"><div><Logo/><span><b>{trip.workingName}</b><small>Working name · Design direction 01</small></span></div><p>Made for good friends and better stories.</p></footer>
+      <footer className="site-footer"><div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div><p>Made for good friends and better stories.</p></footer>
     </main>
   );
 }

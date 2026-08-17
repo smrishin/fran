@@ -13,17 +13,14 @@ async function render(path = "/") {
   );
 }
 
-test("server-renders the trip dashboard", async () => {
+test("server-renders the locked Campfire Code gate", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
   assert.match(html, /Fog &amp; Fire/);
-  assert.match(html, /City lights/);
-  assert.match(html, /San Francisco/);
-  assert.match(html, /Itinerary/);
-  assert.match(html, /Calendar/);
-  assert.match(html, /Guests/);
-  assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/);
+  assert.match(html, /Campfire Code/);
+  assert.match(html, /seven days/);
+  assert.doesNotMatch(html, /City lights|Traveler 01|codex-preview|react-loading-skeleton/);
 });

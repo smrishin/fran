@@ -56,6 +56,8 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .primary-button:hover { background: var(--pine); transform: translateY(-1px); }
 .placeholder-tag { font-family: var(--font-mono), monospace; font-size: 9px; padding: 7px 10px; border: 1px dashed rgba(28,37,34,.25); border-radius: 99px; text-transform: uppercase; letter-spacing: .09em; opacity: .72; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .placeholder-tag i { width: 5px; height: 5px; border-radius: 50%; background: var(--sun); }
+.confirmed-tag { font-family: var(--font-mono), monospace; font-size: 9px; padding: 7px 10px; border: 1px solid rgba(41,79,69,.28); color: var(--pine); background: rgba(41,79,69,.07); border-radius: 99px; text-transform: uppercase; letter-spacing: .09em; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.confirmed-tag i { width: 6px; height: 6px; border-radius: 50%; background: #55976c; }
 
 .route-card { background: var(--ink); color: white; border-radius: 5px; padding: 18px; transform: rotate(1.4deg); box-shadow: 24px 28px 60px rgba(28,37,34,.2); }
 .route-card-top, .route-card-bottom { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono), monospace; font-size: 9px; letter-spacing: .14em; opacity: .72; }
@@ -71,7 +73,7 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .route-stop { position: absolute; display: flex; align-items: center; gap: 7px; font-size: 10px; }
 .route-stop span { width: 23px; height: 23px; background: var(--ink); color: white; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-mono); font-size: 8px; box-shadow: 0 0 0 3px rgba(255,255,255,.5); }
 .route-stop b { background: rgba(244,240,230,.9); padding: 3px 5px; }
-.stop-1 { left: 34px; top: 47px; }.stop-2 { left: 160px; top: 112px; }.stop-3 { left: 70px; bottom: 92px; }.stop-4 { right: 26px; bottom: 41px; }
+.stop-1 { left: 30px; top: 45px; }.stop-2 { left: 150px; top: 104px; }.stop-3 { left: 72px; bottom: 92px; }.stop-4 { right: 25px; bottom: 42px; }.stop-5 { right: 28px; top: 150px; }
 
 .quick-strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 clamp(22px, 5vw, 76px); }
 .quick-strip > div { padding: 27px clamp(15px, 2.4vw, 34px); border-right: 1px solid var(--line); }
@@ -89,7 +91,7 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .panel-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 .panel-heading h2 { font-size: clamp(42px, 5vw, 72px); }
 .panel-heading button, .calendar-peek button { border: 1px solid rgba(255,255,255,.25); background: transparent; color: white; border-radius: 99px; padding: 10px 14px; font-size: 10px; cursor: pointer; white-space: nowrap; }
-.mini-days { margin-top: 48px; border-top: 1px solid rgba(255,255,255,.18); display: grid; grid-template-columns: repeat(7, 1fr); }
+.mini-days { margin-top: 48px; border-top: 1px solid rgba(255,255,255,.18); display: grid; grid-template-columns: repeat(9, 1fr); }
 .mini-days button { color: white; border: 0; border-right: 1px solid rgba(255,255,255,.13); background: transparent; min-width: 0; padding: 20px 10px 15px; text-align: left; cursor: pointer; }
 .mini-days button:hover { background: rgba(255,255,255,.06); }
 .mini-days button:last-child { border-right: 0; }
@@ -180,14 +182,23 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .privacy-note { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); padding: 16px; border-radius: 4px; }
 .privacy-note b { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--sun); }
 .privacy-note p { font-size: 9px; line-height: 1.6; opacity: .58; margin: 6px 0 0; }
+.calendar-live-count { display: flex; align-items: center; gap: 14px; margin: 28px 0 8px; }
+.calendar-live-count strong { font-family: Georgia, serif; font-size: 72px; line-height: 1; color: var(--sun); }
+.calendar-live-count span { font-family: var(--font-mono); font-size: 8px; line-height: 1.45; letter-spacing: .14em; opacity: .55; }
 
 .guest-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding-bottom: 120px; align-items: stretch; }
 .guest-card { padding: 27px; }
 .guest-card > header { display: flex; gap: 14px; align-items: center; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
 .guest-avatar { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: white; font-family: var(--font-mono); font-size: 10px; background: var(--coral); }
 .avatar-2 { background: var(--lake); }.avatar-3 { background: var(--pine); }
-.guest-card header h2 { font-size: 20px; letter-spacing: -.03em; margin-bottom: 7px; }
+.avatar-4 { background: #9b604f; }.avatar-5 { background: #376f6d; }.avatar-6 { background: #b18236; }.avatar-7 { background: #554c71; }
+.guest-card header h2 { font-size: 20px; letter-spacing: -.03em; margin-bottom: 5px; }
+.guest-card > header > div:last-child { min-width: 0; }
+.guest-card header p { font-size: 9px; opacity: .48; margin: 7px 0 0; }
 .guest-card .placeholder-tag { font-size: 7px; padding: 4px 7px; }
+.guest-status { display: inline-block; font-family: var(--font-mono); font-size: 7px; padding: 4px 7px; border-radius: 99px; letter-spacing: .07em; text-transform: uppercase; color: var(--lake); background: rgba(33,107,122,.09); }
+.status-host { color: var(--coral); background: rgba(239,101,74,.09); }
+.status-flight-pending { color: #8a6729; background: rgba(244,187,76,.16); }
 .flight-leg { padding: 23px 0 20px; border-bottom: 1px solid var(--line); }
 .leg-title { display: flex; gap: 10px; align-items: center; }
 .leg-title > span { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: white; background: var(--lake); font-size: 12px; }
@@ -195,13 +206,18 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .leg-title small { font-family: var(--font-mono); font-size: 7px; opacity: .48; display: block; letter-spacing: .13em; }
 .leg-title b { font-size: 10px; }
 .airport-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; margin: 24px 0; }
-.airport-row strong { font-size: 18px; }
+.airport-row strong { font-size: 18px; display: block; }
+.airport-row small { display: block; font-size: 9px; opacity: .52; margin-top: 3px; }
+.airport-destination { text-align: right; }
 .airport-row i { display: block; height: 1px; background: var(--line); position: relative; }
 .airport-row i::after { content: ""; border-width: 3px 0 3px 5px; border-style: solid; border-color: transparent transparent transparent #a7a9a6; position: absolute; right: -1px; top: -2px; }
-.flight-meta { display: grid; grid-template-columns: 1fr 1fr; }
+.flight-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 8px; }
 .flight-meta span { font-family: var(--font-mono); font-size: 7px; opacity: .5; }
 .flight-meta b { display: block; color: var(--ink); opacity: 1; font-size: 9px; margin-top: 4px; }
 .tbd-value { color: #999b97; }
+.no-flight { padding: 25px 0 4px 36px; }
+.no-flight b { font-size: 12px; }
+.no-flight p { font-size: 9px; opacity: .48; margin: 4px 0 0; }
 .guest-note { font-size: 9px; line-height: 1.5; opacity: .5; margin: 17px 0 0; }
 .add-guest-card { border: 1px dashed rgba(28,37,34,.3); border-radius: 5px; min-height: 210px; display: grid; place-items: center; align-content: center; text-align: center; padding: 30px; }
 .add-guest-card > span { width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: white; display: grid; place-items: center; font-size: 21px; }
@@ -213,6 +229,27 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .site-footer b { display: block; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; }
 .site-footer small { display: block; font-family: var(--font-mono); font-size: 7px; margin-top: 3px; opacity: .45; text-transform: uppercase; }
 .site-footer p { font-family: Georgia, serif; font-style: italic; color: var(--coral); font-size: 13px; }
+
+.access-screen { position: fixed; inset: 0; z-index: 100; min-height: 100svh; overflow: auto; background: var(--ink); color: white; display: grid; place-items: center; padding: 54px 22px 92px; isolation: isolate; }
+.access-screen::before { content: ""; position: fixed; inset: 0; z-index: -2; background: linear-gradient(115deg, rgba(33,107,122,.28), transparent 38%), radial-gradient(circle at 78% 18%, rgba(239,101,74,.2), transparent 30%); }
+.access-screen::after { content: ""; position: fixed; width: min(62vw, 820px); height: min(62vw, 820px); border: 1px solid rgba(255,255,255,.07); border-radius: 50%; z-index: -1; right: -25vw; bottom: -38vw; box-shadow: 0 0 0 90px rgba(255,255,255,.018), 0 0 0 180px rgba(255,255,255,.012); }
+.access-sun { position: fixed; width: 160px; height: 160px; border-radius: 50%; background: var(--coral); right: clamp(35px, 11vw, 160px); top: clamp(45px, 11vh, 120px); z-index: -1; box-shadow: 0 0 90px rgba(239,101,74,.22); }
+.access-card { width: min(680px, 100%); margin-right: clamp(0px, 16vw, 230px); }
+.access-brand { display: flex; align-items: center; gap: 12px; margin-bottom: clamp(55px, 9vh, 100px); }
+.access-brand b { display: block; font-size: 14px; letter-spacing: .13em; }
+.access-brand small { display: block; font-family: var(--font-mono); font-size: 8px; letter-spacing: .12em; color: rgba(255,255,255,.45); margin-top: 3px; }
+.access-card h1 { font-size: clamp(54px, 7vw, 92px); }
+.access-card h1 em { color: #f19a84; }
+.access-intro { font-size: 15px; line-height: 1.6; color: rgba(255,255,255,.57); margin: 28px 0 36px; }
+.access-card form label { display: block; font-family: var(--font-mono); font-size: 8px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 9px; }
+.access-input-row { display: grid; grid-template-columns: 1fr auto; border-bottom: 1px solid rgba(255,255,255,.35); }
+.access-input-row:focus-within { border-color: var(--sun); }
+.access-input-row input { min-width: 0; height: 58px; border: 0; background: transparent; outline: 0; color: white; font-size: 22px; letter-spacing: .12em; }
+.access-input-row button { border: 0; background: var(--coral); color: white; padding: 0 22px; border-radius: 5px 5px 0 0; font-size: 11px; font-weight: 700; cursor: pointer; }
+.access-input-row button:disabled { opacity: .55; cursor: wait; }
+.access-message { color: #f1a997; font-size: 11px; margin: 12px 0 0; }
+.access-note { font-family: var(--font-mono); font-size: 8px; letter-spacing: .05em; color: rgba(255,255,255,.35); margin: 14px 0 0; }
+.access-footer { position: fixed; bottom: 30px; left: clamp(22px, 5vw, 76px); right: clamp(22px, 5vw, 76px); display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 8px; letter-spacing: .14em; color: rgba(255,255,255,.38); }
 
 @media (max-width: 1050px) {
   .hero { gap: 50px; grid-template-columns: 1fr minmax(360px, .8fr); }
@@ -270,6 +307,13 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .guest-grid { grid-template-columns: 1fr; padding-bottom: 80px; }
   .site-footer { min-height: 120px; margin-inline: 18px; }
   .site-footer p { display: none; }
+  .access-screen { padding: 34px 20px 96px; place-items: start center; }
+  .access-card { margin: 0; padding-top: 10px; }
+  .access-brand { margin-bottom: 72px; }
+  .access-sun { width: 95px; height: 95px; right: 22px; top: 105px; opacity: .82; }
+  .access-card h1 { font-size: clamp(52px, 15vw, 74px); }
+  .access-footer { bottom: 26px; left: 20px; right: 20px; }
+  .access-footer span:last-child { display: none; }
 }
 
 @media (max-width: 430px) {
@@ -288,6 +332,10 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .page-title-row h1 { font-size: 56px; }
   .calendar-title .sync-status { width: max-content; }
   .guest-card { padding: 22px; }
+  .access-brand { margin-bottom: 64px; }
+  .access-input-row { grid-template-columns: 1fr; border-bottom: 0; gap: 10px; }
+  .access-input-row input { border-bottom: 1px solid rgba(255,255,255,.35); }
+  .access-input-row button { height: 50px; border-radius: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
