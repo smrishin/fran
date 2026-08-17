@@ -59,6 +59,9 @@ export const trip = {
     source: "iCloud public calendar",
     apiPath: "/api/calendar",
   },
+  photos: {
+    albumUrl: "",
+  },
 };
 
 const openPlan = (id: string, title: string, location: string): Activity => ({

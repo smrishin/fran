@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type Guest } from "../data/trip";
 import type { CalendarEvent } from "../lib/ics";
@@ -201,6 +202,19 @@ function useCaliforniaDate() {
   return today;
 }
 
+function useCurrentTime() {
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    const update = () => setNow(Date.now());
+    queueMicrotask(update);
+    const timer = window.setInterval(update, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return now;
+}
+
 function daysBetween(start: string, end: string) {
   const asUtc = (value: string) => {
     const [year, month, day] = value.split("-").map(Number);
@@ -242,13 +256,29 @@ function TripDateCards() {
   );
 }
 
-function NextPlannedCard() {
+function NextPlannedCard({ calendar }: { calendar: CalendarPayload | null }) {
   const today = useCaliforniaDate();
+  const now = useCurrentTime();
   const currentDay = itinerary.find((day) => day.date === today);
   const nextDay = itinerary.find((day) => !today || day.date > today);
-  const featuredDay = currentDay ?? nextDay ?? itinerary[itinerary.length - 1];
-  const label = currentDay ? "TODAY" : nextDay ? "NEXT PLANNED" : "TRIP COMPLETE";
-  const activity = featuredDay.activities[0];
+  const fallbackDay = currentDay ?? nextDay ?? itinerary[itinerary.length - 1];
+  const itineraryDates = useMemo(() => new Set(itinerary.map((day) => day.date)), []);
+  const nextEvent = useMemo(() => {
+    if (!calendar?.events.length || now === null || !today) return undefined;
+    return calendar.events.find((event) => {
+      const eventDate = event.start.slice(0, 10);
+      if (!itineraryDates.has(eventDate)) return false;
+      if (event.allDay) return eventDate >= today;
+      const start = new Date(event.start).getTime();
+      return Number.isFinite(start) ? start >= now : eventDate >= today;
+    });
+  }, [calendar, itineraryDates, now, today]);
+  const liveDay = nextEvent ? itinerary.find((day) => day.date === nextEvent.start.slice(0, 10)) : undefined;
+  const featuredDay = liveDay ?? fallbackDay;
+  const activity = nextEvent ? eventToActivity(nextEvent) : featuredDay.activities[0];
+  const label = nextEvent
+    ? nextEvent.start.slice(0, 10) === today ? "TODAY" : "NEXT PLANNED"
+    : currentDay ? "TODAY" : nextDay ? "NEXT PLANNED" : "TRIP COMPLETE";
 
   return (
     <div className="next-card panel-paper">
@@ -258,7 +288,7 @@ function NextPlannedCard() {
       <p>{formatTripDate(featuredDay.date)}</p>
       <hr />
       <dl><div><dt>TIME</dt><dd>{activity.startTime ?? "TBD"}</dd></div><div><dt>PLAN</dt><dd>{activity.title}</dd></div></dl>
-      <span className="confirmed-tag"><i /> Date confirmed</span>
+      <span className="confirmed-tag"><i /> {nextEvent ? "Live from iCloud" : "Date confirmed"}</span>
     </div>
   );
 }
@@ -294,7 +324,7 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: Navi
   );
 }
 
-function HomeView({ onNavigate }: { onNavigate: Navigate }) {
+function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: CalendarPayload | null }) {
   const weekStops = ["Big Sur", "Santa Cruz", "Lake Tahoe", "San Francisco", "Sunnyvale"];
 
   return (
@@ -341,17 +371,23 @@ function HomeView({ onNavigate }: { onNavigate: Navigate }) {
           </div>
         </div>
 
-        <NextPlannedCard />
+        <NextPlannedCard calendar={calendar} />
 
-        <div className="trip-shape panel-paper">
-          <div className="card-kicker">TRIP SHAPE</div>
-          <h3>Coast → Lake → Bay</h3>
-          <p>The main daily destinations are now confirmed. Times, activities, and costs can fill in as the shared calendar evolves.</p>
-          <div className="theme-tags"><span>Boating</span><span>Camping</span><span>Alcatraz</span><span>Halloween</span></div>
+        <div className="photos-card panel-paper">
+          <div>
+            <p className="eyebrow">PHOTOS</p>
+            <h3>Trip photo album</h3>
+            <p>Open the shared album to view photos or add your own.</p>
+          </div>
+          {trip.photos.albumUrl ? (
+            <a href={trip.photos.albumUrl} target="_blank" rel="noreferrer">Open shared album <span>↗</span></a>
+          ) : (
+            <span className="album-pending">Album link pending</span>
+          )}
         </div>
 
         <div className="calendar-peek panel-lake">
-          <div><p className="eyebrow light">SHARED CALENDAR</p><h3>Current plans,<br/>updated from iCloud.</h3></div>
+          <div><h3>Current plans,<br/>updated from iCloud.</h3></div>
           <button onClick={() => onNavigate("calendar")}>Open calendar <span>→</span></button>
         </div>
       </section>
@@ -583,11 +619,22 @@ export function TripDashboard() {
   return (
     <main>
       <AppHeader section={section} onNavigate={navigate} />
-      {section === "home" && <HomeView onNavigate={navigate} />}
+      {section === "home" && <HomeView onNavigate={navigate} calendar={calendar} />}
       {section === "itinerary" && <ItineraryView calendar={calendar} selectedIndex={selectedItineraryIndex} onSelect={setSelectedItineraryIndex} />}
       {section === "calendar" && <CalendarView calendar={calendar} />}
       {section === "guests" && <GuestsView />}
-      <footer className="site-footer"><div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div><p>Made for good friends and better stories.</p></footer>
+      <footer className="site-footer">
+        <div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div>
+        <div className="footer-actions">
+          <p>Made for good friends and better stories.</p>
+          <Link
+            href="/install"
+            aria-label="Learn how to install this app on iPhone or Android"
+          >
+            Install this app <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </footer>
     </main>
   );
 }

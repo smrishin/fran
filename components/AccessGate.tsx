@@ -39,7 +39,7 @@ export function AccessGate() {
           <span className="brand-mark" aria-hidden="true"><i /></span>
           <span><b>FOG &amp; FIRE</b><small>CALIFORNIA · ’26</small></span>
         </div>
-        <p className="eyebrow">PRIVATE TRIP DASHBOARD</p>
+        <p className="eyebrow">San Francisco · Santa Cruz · Lake Tahoe · Sunnyvale</p>
         <h1>Welcome to<br/><em>Fog &amp; Fire.</em></h1>
         <p className="access-intro">Enter the group’s Campfire Code to open the trip dashboard.</p>
         <form onSubmit={unlock}>

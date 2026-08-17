@@ -132,18 +132,23 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .mini-days small { font-family: var(--font-mono); font-size: 7px; opacity: .5; display: block; }
 .mini-days strong { font-size: 24px; display: block; margin: 3px 0 18px; }
 .mini-days span { font-size: 9px; line-height: 1.2; opacity: .72; display: block; overflow: hidden; text-overflow: ellipsis; }
-.next-card, .trip-shape { padding: 28px; }
+.next-card { padding: 28px; }
 .pulse { width: 6px; height: 6px; background: var(--coral); display: inline-block; border-radius: 50%; }
 .big-number { float: right; font-family: Georgia, serif; font-size: 78px; line-height: .8; color: rgba(28,37,34,.07); }
-.next-card h3, .trip-shape h3 { font-size: 24px; margin: 32px 0 4px; letter-spacing: -.03em; }
-.next-card > p, .trip-shape > p { font-size: 13px; opacity: .58; line-height: 1.6; }
+.next-card h3 { font-size: 24px; margin: 32px 0 4px; letter-spacing: -.03em; }
+.next-card > p { font-size: 13px; opacity: .58; line-height: 1.6; }
 .next-card hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0 18px; }
 .next-card dl { display: grid; grid-template-columns: 1fr 1.5fr; margin: 0 0 24px; }
 .next-card dl div { display: flex; flex-direction: column; gap: 4px; }
 .next-card dt { font-family: var(--font-mono); font-size: 8px; opacity: .45; letter-spacing: .12em; }
 .next-card dd { margin: 0; font-size: 12px; font-weight: 650; }
-.theme-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 24px; }
-.theme-tags span { background: var(--soft); padding: 7px 10px; border-radius: 99px; font-size: 10px; }
+.photos-card { padding: 28px; }
+.photos-card .eyebrow { margin-bottom: 10px; }
+.photos-card h3 { margin: 30px 0 4px; font-size: 24px; letter-spacing: -.03em; }
+.photos-card p:not(.eyebrow) { margin: 7px 0 0; font-size: 13px; line-height: 1.6; opacity: .58; }
+.photos-card > a { width: 100%; margin-top: 24px; padding: 13px 15px; border-radius: 6px; background: var(--dark-panel); color: white; display: flex; justify-content: space-between; gap: 22px; font-size: 11px; font-weight: 700; text-decoration: none; }
+.album-pending { padding: 9px 11px; border: 1px solid var(--line); border-radius: 99px; font-family: var(--font-mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; opacity: .55; white-space: nowrap; }
+.photos-card .album-pending { display: inline-block; margin-top: 24px; }
 .calendar-peek { grid-column: 1 / -1; padding: 34px 38px; display: flex; justify-content: space-between; align-items: flex-end; }
 .calendar-peek h3 { margin: 0; font-size: clamp(25px, 3vw, 40px); letter-spacing: -.04em; line-height: 1.05; }
 .calendar-peek button { font-size: 11px; padding: 13px 16px; display: flex; gap: 42px; }
@@ -296,6 +301,37 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .site-footer b { display: block; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; }
 .site-footer small { display: block; font-family: var(--font-mono); font-size: 7px; margin-top: 3px; opacity: .45; text-transform: uppercase; }
 .site-footer p { font-family: Georgia, serif; font-style: italic; color: var(--coral); font-size: 13px; }
+.footer-actions { justify-content: flex-end; gap: 24px; }
+.footer-actions a { display: inline-flex; align-items: center; gap: 7px; border-bottom: 1px solid currentColor; color: var(--ink); font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .1em; line-height: 1.8; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+.footer-actions a:hover { color: var(--coral); }
+
+.install-guide { min-height: 100svh; padding: 0 clamp(22px, 6vw, 92px) 90px; background: var(--cream); color: var(--ink); }
+.install-guide-header { min-height: 92px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.install-brand { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+.install-brand b { display: block; font-size: 14px; letter-spacing: .13em; }
+.install-brand small { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: 8px; letter-spacing: .08em; opacity: .5; text-transform: uppercase; }
+.install-back { border-bottom: 1px solid currentColor; color: inherit; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .08em; line-height: 1.8; text-decoration: none; text-transform: uppercase; }
+.install-back:hover { color: var(--coral); }
+.install-guide-intro { padding: clamp(64px, 9vw, 120px) 0 clamp(48px, 7vw, 84px); display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .6fr); gap: 18px clamp(40px, 8vw, 120px); align-items: end; }
+.install-guide-intro .eyebrow { grid-column: 1 / -1; }
+.install-guide-intro h1 { font-size: clamp(54px, 8vw, 118px); letter-spacing: -.065em; line-height: .86; }
+.install-guide-intro h1 em { color: var(--coral); font-family: Georgia, serif; font-weight: 400; }
+.install-guide-intro > p:last-child { max-width: 410px; margin: 0 0 6px; font-size: clamp(15px, 1.5vw, 19px); line-height: 1.65; opacity: .62; }
+.install-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.install-option { padding: clamp(24px, 3vw, 42px); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.install-option > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.install-option header small { font-family: var(--font-mono); font-size: 8px; letter-spacing: .14em; opacity: .46; text-transform: uppercase; }
+.install-option h2 { margin-top: 7px; font-size: clamp(28px, 3vw, 42px); letter-spacing: -.04em; }
+.install-option header > span { padding: 8px 10px; border: 1px solid var(--line); border-radius: 99px; font-family: var(--font-mono); font-size: 7px; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
+.install-option ol { margin: 38px 0 0; padding: 0; list-style: none; counter-reset: install-step; }
+.install-option li { min-height: 52px; padding: 0 0 20px 40px; position: relative; counter-increment: install-step; font-size: 13px; line-height: 1.55; }
+.install-option li::before { content: counter(install-step, decimal-leading-zero); position: absolute; top: 1px; left: 0; color: var(--coral); font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .08em; }
+.install-option li + li { padding-top: 20px; border-top: 1px solid var(--line); }
+.install-option li + li::before { top: 21px; }
+.install-finish { margin-top: 28px; padding: 24px 28px; display: flex; align-items: center; gap: 16px; background: var(--dark-panel); color: white; }
+.install-finish > span { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--lake); }
+.install-finish p { margin: 0; font-size: 13px; line-height: 1.5; opacity: .76; }
+.install-finish b { color: white; }
 
 .access-screen { position: fixed; inset: 0; z-index: 100; min-height: 100svh; overflow: auto; background: var(--dark-panel); color: white; display: grid; place-items: center; padding: 54px 22px 92px; isolation: isolate; }
 .access-screen::before { content: ""; position: fixed; inset: 0; z-index: -2; background: linear-gradient(115deg, rgba(33,107,122,.28), transparent 38%), radial-gradient(circle at 78% 18%, rgba(239,101,74,.2), transparent 30%); }
@@ -350,11 +386,12 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .week-peek { grid-row: auto; padding: 28px 22px; }
   .panel-heading { display: block; }
   .panel-heading button { margin-top: 24px; }
-  .mini-days { grid-template-columns: repeat(4, 1fr); }
-  .mini-days button:nth-child(4) { border-right: 0; }
-  .mini-days button:nth-child(n+5) { border-top: 1px solid rgba(255,255,255,.13); }
+  .mini-days { grid-template-columns: repeat(4, 1fr); gap: 8px; border-top: 0; }
+  .mini-days button { border: 1px solid rgba(255,255,255,.16); border-radius: 4px; }
+  .mini-days button:last-child { border-right: 1px solid rgba(255,255,255,.16); }
   .calendar-peek { grid-column: auto; display: block; padding: 28px; }
   .calendar-peek button { margin-top: 28px; width: 100%; justify-content: space-between; }
+  .photos-card { padding: 25px 22px; }
   .page-title-row { padding-block: 58px 42px; display: block; }
   .page-title-row h1 { font-size: clamp(56px, 17vw, 78px); }
   .page-note, .sync-status { margin-top: 32px; }
@@ -391,6 +428,7 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .guest-grid { grid-template-columns: 1fr; padding-bottom: 80px; }
   .site-footer { min-height: 120px; margin-inline: 18px; }
   .site-footer p { display: none; }
+  .footer-actions { gap: 0; }
   .access-screen { padding: 34px 20px 96px; place-items: start center; }
   .access-card { margin: 0; padding-top: 10px; }
   .access-brand { margin-bottom: 72px; }
@@ -398,6 +436,13 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .access-card h1 { font-size: clamp(52px, 15vw, 74px); }
   .access-footer { bottom: 26px; left: 20px; right: 20px; }
   .access-footer span:last-child { display: none; }
+  .install-guide { padding-inline: 18px; padding-bottom: 46px; }
+  .install-guide-header { min-height: 78px; }
+  .install-guide-intro { padding-block: 58px 46px; grid-template-columns: 1fr; }
+  .install-guide-intro > p:last-child { margin-top: 14px; }
+  .install-options { grid-template-columns: 1fr; }
+  .install-option { padding: 26px 22px; }
+  .install-option ol { margin-top: 30px; }
 }
 
 @media (max-width: 430px) {
@@ -411,8 +456,6 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .quick-strip > div { border-right: 0; border-bottom: 1px solid var(--line); }
   .quick-strip > div:last-child { border-bottom: 0; }
   .mini-days { grid-template-columns: repeat(2, 1fr); }
-  .mini-days button:nth-child(even) { border-right: 0; }
-  .mini-days button:nth-child(n+3) { border-top: 1px solid rgba(255,255,255,.13); }
   .page-title-row h1 { font-size: 56px; }
   .calendar-title .sync-status { width: max-content; }
   .guest-card { padding: 22px; }
@@ -420,6 +463,9 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .access-input-row { grid-template-columns: 1fr; border-bottom: 0; gap: 10px; }
   .access-input-row input { border-bottom: 1px solid rgba(255,255,255,.35); }
   .access-input-row button { height: 50px; border-radius: 5px; }
+  .install-brand small { display: none; }
+  .install-back { font-size: 7px; }
+  .install-guide-intro h1 { font-size: clamp(48px, 14.5vw, 64px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
