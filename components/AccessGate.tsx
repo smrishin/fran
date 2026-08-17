@@ -60,6 +60,14 @@ export function AccessGate() {
           {message ? <p className="access-message" id="access-message" role="alert">{message}</p> : null}
         </form>
         <p className="access-note" id="access-note">One successful code unlocks this device for seven days.</p>
+        <a className="access-install" href="/install">
+          <span className="access-install-icon" aria-hidden="true">↓</span>
+          <span>
+            <b>Add Fog &amp; Fire to your home screen</b>
+            <small>Open it like an app · iPhone &amp; Android steps</small>
+          </span>
+          <span className="access-install-arrow" aria-hidden="true">→</span>
+        </a>
       </section>
       <footer className="access-footer"><span>OCT 24 — NOV 01</span><span>CALIFORNIA · 2026</span></footer>
     </main>

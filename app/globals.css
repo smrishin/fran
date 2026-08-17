@@ -352,6 +352,13 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .access-input-row button:disabled { opacity: .55; cursor: wait; }
 .access-message { color: #f1a997; font-size: 11px; margin: 12px 0 0; }
 .access-note { font-family: var(--font-mono); font-size: 8px; letter-spacing: .05em; color: rgba(255,255,255,.35); margin: 14px 0 0; }
+.access-install { width: min(460px, 100%); min-height: 62px; margin-top: 26px; padding: 11px 14px; border: 1px solid rgba(255,255,255,.14); border-radius: 6px; color: white; display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; text-decoration: none; transition: border-color .2s ease, background-color .2s ease, transform .2s ease; }
+.access-install:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.055); transform: translateY(-1px); }
+.access-install-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--lake); display: grid; place-items: center; font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
+.access-install b { display: block; font-size: 11px; letter-spacing: .01em; }
+.access-install small { display: block; margin-top: 4px; color: rgba(255,255,255,.42); font-family: var(--font-mono); font-size: 7px; letter-spacing: .05em; text-transform: uppercase; }
+.access-install-arrow { color: #f19a84; font-size: 17px; transition: transform .2s ease; }
+.access-install:hover .access-install-arrow { transform: translateX(3px); }
 .access-footer { position: fixed; bottom: 30px; left: clamp(22px, 5vw, 76px); right: clamp(22px, 5vw, 76px); display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 8px; letter-spacing: .14em; color: rgba(255,255,255,.38); }
 
 @media (max-width: 1050px) {
@@ -434,6 +441,7 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .access-brand { margin-bottom: 72px; }
   .access-sun { width: 95px; height: 95px; right: 22px; top: 105px; opacity: .82; }
   .access-card h1 { font-size: clamp(52px, 15vw, 74px); }
+  .access-install { margin-top: 24px; }
   .access-footer { bottom: 26px; left: 20px; right: 20px; }
   .access-footer span:last-child { display: none; }
   .install-guide { padding-inline: 18px; padding-bottom: 46px; }
@@ -463,6 +471,8 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .access-input-row { grid-template-columns: 1fr; border-bottom: 0; gap: 10px; }
   .access-input-row input { border-bottom: 1px solid rgba(255,255,255,.35); }
   .access-input-row button { height: 50px; border-radius: 5px; }
+  .access-install { grid-template-columns: 32px 1fr auto; padding-inline: 12px; }
+  .access-install-icon { width: 32px; height: 32px; }
   .install-brand small { display: none; }
   .install-back { font-size: 7px; }
   .install-guide-intro h1 { font-size: clamp(48px, 14.5vw, 64px); }

@@ -22,6 +22,8 @@ test("server-renders the locked Campfire Code gate", async () => {
   assert.match(html, /Fog &amp; Fire/);
   assert.match(html, /Campfire Code/);
   assert.match(html, /seven days/);
+  assert.match(html, /Add Fog &amp; Fire to your home screen/);
+  assert.match(html, /href="\/install"/);
   assert.match(html, /favicon-32\.png/);
   assert.match(html, /manifest\.webmanifest/);
   assert.doesNotMatch(html, /City lights|Traveler 01|codex-preview|react-loading-skeleton/);
