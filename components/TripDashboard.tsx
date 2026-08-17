@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type Guest } from "../data/trip";
 import type { CalendarEvent } from "../lib/ics";
+import { ThemeToggle } from "./ThemeToggle";
 
 type Section = "home" | "itinerary" | "calendar" | "guests";
 type CalendarPayload = {
@@ -71,15 +72,88 @@ function formatTripDate(value?: string) {
   return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(date);
 }
 
-function Countdown() {
-  const [days, setDays] = useState<number | null>(null);
+function useCaliforniaDate() {
+  const [today, setToday] = useState("");
 
   useEffect(() => {
-    const start = new Date(`${trip.dates.start}T00:00:00-07:00`).getTime();
-    queueMicrotask(() => setDays(Math.max(0, Math.ceil((start - Date.now()) / 86_400_000))));
+    const update = () => {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(new Date());
+      const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+      setToday(`${value.year}-${value.month}-${value.day}`);
+    };
+    queueMicrotask(update);
+    const timer = window.setInterval(update, 60_000);
+    return () => window.clearInterval(timer);
   }, []);
 
-  return <strong>{days === null ? "—" : `${days} days`}</strong>;
+  return today;
+}
+
+function daysBetween(start: string, end: string) {
+  const asUtc = (value: string) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.ceil((asUtc(end) - asUtc(start)) / 86_400_000);
+}
+
+function TripDateCards() {
+  const today = useCaliforniaDate();
+  const firstDay = itinerary[0];
+  const lastDay = itinerary[itinerary.length - 1];
+  const currentDay = itinerary.find((day) => day.date === today);
+  const nextDay = itinerary.find((day) => !today || day.date > today);
+
+  let countdownLabel = "COUNTDOWN";
+  let countdownValue = "—";
+  let countdownNote = "Until assemble day";
+  if (today && today < trip.dates.start) countdownValue = `${daysBetween(today, trip.dates.start)} days`;
+  if (currentDay) {
+    countdownLabel = "TRIP DAY";
+    countdownValue = `Day ${currentDay.day} of ${itinerary.length}`;
+    countdownNote = `${currentDay.destination} · today`;
+  }
+  if (today && today > trip.dates.end) {
+    countdownLabel = "STATUS";
+    countdownValue = "Trip complete";
+    countdownNote = "Nine days, well spent";
+  }
+
+  const featuredDay = currentDay ?? nextDay ?? lastDay;
+  const featuredLabel = currentDay ? "TODAY" : nextDay ? "NEXT DAY" : "LAST DAY";
+
+  return (
+    <>
+      <div><small>{countdownLabel}</small><strong>{countdownValue}</strong><p>{countdownNote}</p></div>
+      <div><small>{featuredLabel}</small><strong>{featuredDay?.destination ?? firstDay.destination}</strong><p>{formatTripDate(featuredDay?.date ?? firstDay.date)}</p></div>
+    </>
+  );
+}
+
+function NextPlannedCard() {
+  const today = useCaliforniaDate();
+  const currentDay = itinerary.find((day) => day.date === today);
+  const nextDay = itinerary.find((day) => !today || day.date > today);
+  const featuredDay = currentDay ?? nextDay ?? itinerary[itinerary.length - 1];
+  const label = currentDay ? "TODAY" : nextDay ? "NEXT PLANNED" : "TRIP COMPLETE";
+  const activity = featuredDay.activities[0];
+
+  return (
+    <div className="next-card panel-paper">
+      <div className="card-kicker"><span className="pulse" /> {label}</div>
+      <div className="big-number">{String(featuredDay.day).padStart(2, "0")}</div>
+      <h3>{featuredDay.destination}</h3>
+      <p>{formatTripDate(featuredDay.date)}</p>
+      <hr />
+      <dl><div><dt>TIME</dt><dd>{activity.startTime ?? "TBD"}</dd></div><div><dt>PLAN</dt><dd>{activity.title}</dd></div></dl>
+      <span className="confirmed-tag"><i /> Date confirmed</span>
+    </div>
+  );
 }
 
 function AppHeader({ section, onNavigate }: { section: Section; onNavigate: (section: Section) => void }) {
@@ -95,9 +169,12 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: (sec
             <button key={item.id} className={section === item.id ? "active" : ""} onClick={() => onNavigate(item.id)}>{item.label}</button>
           ))}
         </nav>
-        <button className="avatar-stack" onClick={() => onNavigate("guests")} aria-label="View travelers">
-          <span>HR</span><span>HA</span><b>7 travelers</b>
-        </button>
+        <div className="header-actions">
+          <ThemeToggle />
+          <button className="avatar-stack" onClick={() => onNavigate("guests")} aria-label="View travelers">
+            <span>{guests[0].initials}</span><span>{guests[1].initials}</span><b>7 travelers</b>
+          </button>
+        </div>
       </header>
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {navItems.map((item, index) => (
@@ -127,7 +204,6 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
         </div>
 
         <div className="route-card" aria-label="Trip route concept">
-          <div className="route-card-top"><span>THE ROUTE</span><b>01 — 09</b></div>
           <div className="route-map">
             <div className="sun" />
             <div className="mountains"><i/><i/><i/></div>
@@ -141,8 +217,7 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
       </section>
 
       <section className="quick-strip" aria-label="Trip overview">
-        <div><small>COUNTDOWN</small><Countdown /><p>Until assemble day</p></div>
-        <div><small>FIRST DAY</small><strong>Assemble</strong><p>Saturday · October 24</p></div>
+        <TripDateCards />
         <div><small>TRIP LENGTH</small><strong>9 days</strong><p>October 24 — November 1</p></div>
         <div><small>THE CREW</small><strong>7 travelers</strong><p>Two hosts · Five guests</p></div>
       </section>
@@ -159,15 +234,7 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
           </div>
         </div>
 
-        <div className="next-card panel-paper">
-          <div className="card-kicker"><span className="pulse" /> NEXT PLANNED</div>
-          <div className="big-number">01</div>
-          <h3>Assemble</h3>
-          <p>Saturday · October 24</p>
-          <hr />
-          <dl><div><dt>TIME</dt><dd>TBD</dd></div><div><dt>PLAN</dt><dd>The crew assembles</dd></div></dl>
-          <span className="confirmed-tag"><i /> Day confirmed</span>
-        </div>
+        <NextPlannedCard />
 
         <div className="trip-shape panel-paper">
           <div className="card-kicker">TRIP SHAPE</div>
@@ -295,14 +362,14 @@ function Value({ children }: { children?: string }) {
 }
 
 function FlightInfo({ leg, kind, guest }: { leg: FlightLeg; kind: "arrival" | "departure"; guest: Guest }) {
-  const hasTravel = Boolean(leg.date || leg.origin || leg.destination);
-  const isHost = guest.status === "Host";
+  const hasTravel = Boolean(leg.origin || leg.destination || leg.airline || leg.flightNumber);
+  const noFlightNeeded = guest.status === "Host" || guest.status === "Local";
 
   return (
     <div className={`flight-leg ${kind}`}>
       <div className="leg-title">
         <span>{kind === "arrival" ? "↓" : "↑"}</span>
-        <div><small>{kind.toUpperCase()}</small><b><Value>{leg.date ? formatTripDate(leg.date) : isHost ? "Host · local" : undefined}</Value></b></div>
+        <div><small>{kind.toUpperCase()}</small><b><Value>{leg.date ? formatTripDate(leg.date) : noFlightNeeded ? `${guest.status} · local` : undefined}</Value></b></div>
       </div>
       {hasTravel ? (
         <>
@@ -319,7 +386,7 @@ function FlightInfo({ leg, kind, guest }: { leg: FlightLeg; kind: "arrival" | "d
           </div>
         </>
       ) : (
-        <div className="no-flight"><b>{isHost ? "No flight needed" : "Details awaiting"}</b><p>{isHost ? "Already in the Bay Area." : "Add flight details once confirmed."}</p></div>
+        <div className="no-flight"><b>{noFlightNeeded ? "No flight needed" : "Details awaiting"}</b><p>{noFlightNeeded ? "Already in the Bay Area." : "Add flight details once confirmed."}</p></div>
       )}
     </div>
   );

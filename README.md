@@ -2,6 +2,8 @@
 
 A responsive, private dashboard for the October 24–November 1, 2026 California group trip.
 
+The dashboard includes date-aware trip status cards, a device-persistent light/dark theme, and an installable web-app manifest with dedicated favicon, Apple touch, and maskable phone icons.
+
 ## Local development
 
 ```bash

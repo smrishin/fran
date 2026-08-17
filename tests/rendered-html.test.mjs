@@ -22,5 +22,16 @@ test("server-renders the locked Campfire Code gate", async () => {
   assert.match(html, /Fog &amp; Fire/);
   assert.match(html, /Campfire Code/);
   assert.match(html, /seven days/);
+  assert.match(html, /favicon-32\.png/);
+  assert.match(html, /manifest\.webmanifest/);
   assert.doesNotMatch(html, /City lights|Traveler 01|codex-preview|react-loading-skeleton/);
+});
+
+test("serves the installable app manifest", async () => {
+  const response = await render("/manifest.webmanifest");
+  assert.equal(response.status, 200);
+  const manifest = await response.json();
+  assert.equal(manifest.short_name, "Fog & Fire");
+  assert.equal(manifest.display, "standalone");
+  assert.deepEqual(manifest.icons.map((icon) => icon.sizes), ["192x192", "512x512"]);
 });
