@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type Guest } from "../data/trip";
 import type { CalendarEvent } from "../lib/ics";
@@ -627,12 +626,12 @@ export function TripDashboard() {
         <div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div>
         <div className="footer-actions">
           <p>Made for good friends and better stories.</p>
-          <Link
+          <a
             href="/install"
             aria-label="Learn how to install this app on iPhone or Android"
           >
             Install this app <span aria-hidden="true">→</span>
-          </Link>
+          </a>
         </div>
       </footer>
     </main>

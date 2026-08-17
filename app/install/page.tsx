@@ -1,5 +1,5 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import type { Metadata } from "next";
-import Link from "next/link";
 
 const title = "Put Fog & Fire in Your Pocket";
 const description = "Quick steps for adding the Fog & Fire trip app to an iPhone or Android home screen.";
@@ -51,11 +51,11 @@ export default function InstallGuidePage() {
   return (
     <main className="install-guide">
       <header className="install-guide-header">
-        <Link className="install-brand" href="/" aria-label="Return to Fog and Fire">
+        <a className="install-brand" href="/" aria-label="Return to Fog and Fire">
           <span className="brand-mark" aria-hidden="true"><i /></span>
           <span><b>FOG &amp; FIRE</b><small>California · ’26</small></span>
-        </Link>
-        <Link className="install-back" href="/">← Back to the trip</Link>
+        </a>
+        <a className="install-back" href="/">← Back to the trip</a>
       </header>
 
       <section className="install-guide-intro">
