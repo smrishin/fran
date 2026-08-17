@@ -48,7 +48,7 @@ export type Guest = {
 
 export const trip = {
   workingName: "Fog & Fire",
-  tagline: "California · One wild week",
+  tagline: "California · ’26 · One wild week",
   dates: { start: undefined, end: undefined } as { start?: string; end?: string },
   locations: ["San Francisco", "Lake Tahoe", "Santa Cruz", "Sunnyvale"],
   calendar: {
