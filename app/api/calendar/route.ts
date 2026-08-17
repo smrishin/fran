@@ -21,7 +21,11 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(calendarUrl, {
-      headers: { Accept: "text/calendar, text/plain;q=0.9" },
+      cache: "no-store",
+      headers: {
+        Accept: "text/calendar, text/plain;q=0.9",
+        "Cache-Control": "no-cache",
+      },
       signal: AbortSignal.timeout(8_000),
     });
 
@@ -31,7 +35,7 @@ export async function GET(request: Request) {
 
     return Response.json(
       { configured: true, events: parseIcs(source), syncedAt: new Date().toISOString() },
-      { headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=600" } },
+      { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch {
     return Response.json(

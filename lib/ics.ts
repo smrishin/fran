@@ -6,6 +6,7 @@ export type CalendarEvent = {
   allDay: boolean;
   location?: string;
   description?: string;
+  url?: string;
 };
 
 const unescapeIcs = (value: string) =>
@@ -54,6 +55,7 @@ export function parseIcs(source: string): CalendarEvent[] {
       allDay: /^\d{8}$/.test(startRaw ?? ""),
       location: readProperty(block, "LOCATION") ? unescapeIcs(readProperty(block, "LOCATION")!) : undefined,
       description: readProperty(block, "DESCRIPTION") ? unescapeIcs(readProperty(block, "DESCRIPTION")!) : undefined,
+      url: readProperty(block, "URL") ? unescapeIcs(readProperty(block, "URL")!) : undefined,
     }];
   }).sort((a, b) => a.start.localeCompare(b.start));
 }

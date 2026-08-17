@@ -2,6 +2,7 @@ export type Cost =
   | { kind: "free" }
   | { kind: "per-person"; amount?: number }
   | { kind: "group"; amount?: number }
+  | { kind: "custom"; label: string }
   | { kind: "tbd" };
 
 export type Activity = {
@@ -10,6 +11,7 @@ export type Activity = {
   startTime?: string;
   duration?: string;
   location?: string;
+  website?: string;
   cost: Cost;
   notes?: string;
   placeholder?: boolean;

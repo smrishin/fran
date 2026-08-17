@@ -153,7 +153,19 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .page-note { max-width: 370px; padding-bottom: 10px; }
 .page-note p { font-size: 13px; line-height: 1.6; opacity: .58; margin: 17px 0 0; }
 
-.itinerary-list { padding-bottom: 120px; }
+.itinerary-stage { padding-bottom: 120px; }
+.itinerary-piano { display: grid; grid-template-columns: repeat(9, minmax(102px, 1fr)); gap: 2px; overflow-x: auto; padding: 10px 10px 16px; margin-bottom: 18px; background: var(--dark-panel); border-radius: 6px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.3) transparent; }
+.piano-key { --accent: var(--coral); position: relative; min-width: 102px; min-height: 164px; padding: 20px 13px 14px; overflow: hidden; border: 0; border-radius: 2px 2px 7px 7px; background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; box-shadow: inset 0 -7px 0 color-mix(in srgb, var(--ink) 9%, transparent), 0 5px 0 rgba(0,0,0,.28); transition: transform .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease; }
+.piano-key::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: var(--accent); }
+.piano-key:hover { transform: translateY(2px); box-shadow: inset 0 -5px 0 color-mix(in srgb, var(--ink) 9%, transparent), 0 3px 0 rgba(0,0,0,.28); }
+.piano-key.active { transform: translateY(6px); background: var(--accent); color: white; box-shadow: inset 0 -2px 0 rgba(0,0,0,.14); }
+.piano-key.tone-sun.active { color: #1c2522; }
+.piano-key small { display: block; font-family: var(--font-mono); font-size: 7px; letter-spacing: .16em; opacity: .5; }
+.piano-key strong { display: block; margin-top: 3px; font-size: 31px; line-height: 1; }
+.piano-key time { display: block; margin-top: 8px; font-family: var(--font-mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; opacity: .62; }
+.piano-key > span { position: absolute; left: 13px; right: 10px; bottom: 18px; font-size: 10px; font-weight: 700; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; }
+.selected-day { margin-bottom: 0; animation: selected-day-in .28s ease both; }
+@keyframes selected-day-in { from { opacity: .65; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 .day-block { background: var(--paper); border: 1px solid var(--line); border-top: 4px solid var(--accent); margin-bottom: 18px; border-radius: 5px; overflow: hidden; }
 .tone-coral { --accent: var(--coral); }.tone-lake { --accent: var(--lake); }.tone-pine { --accent: var(--pine); }.tone-sun { --accent: var(--sun); }
 .day-block > header { min-height: 116px; padding: 22px 28px; display: grid; grid-template-columns: 94px 1fr auto; align-items: center; border-bottom: 1px solid var(--line); }
@@ -170,9 +182,12 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .activity-time small { font-size: 9px; opacity: .48; }
 .activity-copy h3 { margin: 0; font-size: 17px; }
 .activity-copy p { margin: 5px 0 0; font-size: 11px; opacity: .55; }
-.activity-copy > small { display: block; margin-top: 5px; font-size: 10px; opacity: .48; }
+.activity-copy > small { display: block; margin-top: 7px; font-size: 10px; line-height: 1.55; opacity: .58; white-space: pre-line; }
+.activity-copy > a { display: inline-flex; gap: 5px; margin-top: 9px; color: var(--lake); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .05em; text-decoration: none; text-transform: uppercase; }
+.activity-copy > a:hover { text-decoration: underline; }
 .cost-chip { font-family: var(--font-mono); font-size: 9px; padding: 7px 9px; background: var(--chip); border-radius: 4px; white-space: nowrap; }
 .cost-chip.free { background: #dbe9df; color: var(--pine); }
+.cost-chip.custom { background: color-mix(in srgb, var(--sun) 23%, var(--chip)); }
 
 .calendar-title { padding-bottom: 56px; }
 .sync-status { border: 1px solid var(--line); border-radius: 99px; padding: 10px 14px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; display: flex; align-items: center; gap: 8px; }
@@ -322,6 +337,14 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .page-title-row { padding-block: 58px 42px; display: block; }
   .page-title-row h1 { font-size: clamp(56px, 17vw, 78px); }
   .page-note, .sync-status { margin-top: 32px; }
+  .itinerary-piano { width: auto; grid-template-columns: 1fr; gap: 3px; overflow: visible; padding: 8px 12px 12px 8px; }
+  .piano-key { width: 100%; min-width: 0; min-height: 72px; padding: 12px 18px; display: grid; grid-template-columns: 28px 42px 64px minmax(0, 1fr); gap: 9px; align-items: center; border-radius: 2px 7px 7px 2px; box-shadow: inset -7px 0 0 color-mix(in srgb, var(--ink) 9%, transparent), 5px 0 0 rgba(0,0,0,.28); }
+  .piano-key::before { inset: 0 auto 0 0; width: 4px; height: auto; }
+  .piano-key:hover { transform: translateX(2px); box-shadow: inset -5px 0 0 color-mix(in srgb, var(--ink) 9%, transparent), 3px 0 0 rgba(0,0,0,.28); }
+  .piano-key.active { transform: translateX(6px); box-shadow: inset -2px 0 0 rgba(0,0,0,.14); }
+  .piano-key strong { margin: 0; font-size: 27px; }
+  .piano-key time { margin: 0; }
+  .piano-key > span { position: static; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .day-block > header { grid-template-columns: 72px 1fr; padding: 19px; }
   .day-status { display: none; }
   .day-number strong { font-size: 33px; }

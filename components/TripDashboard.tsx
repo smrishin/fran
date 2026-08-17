@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type Guest } from "../data/trip";
 import type { CalendarEvent } from "../lib/ics";
+import { parseItineraryNotes } from "../lib/itinerary";
 import { ThemeToggle } from "./ThemeToggle";
 
 type Section = "home" | "itinerary" | "calendar" | "guests";
@@ -32,6 +33,7 @@ function costLabel(cost: Cost) {
   if (cost.kind === "free") return "Free";
   if (cost.kind === "per-person") return cost.amount ? `$${cost.amount} / person` : "Per person · TBD";
   if (cost.kind === "group") return cost.amount ? `$${cost.amount} group` : "Group cost · TBD";
+  if (cost.kind === "custom") return cost.label;
   return "Cost TBD";
 }
 
@@ -43,6 +45,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
         <h3>{activity.title}</h3>
         <p>{activity.location ?? "Location TBD"}</p>
         {activity.notes && <small>{activity.notes}</small>}
+        {activity.website && <a href={activity.website} target="_blank" rel="noreferrer">Visit website <span>↗</span></a>}
       </div>
       <div className={`cost-chip ${activity.cost.kind}`}>{costLabel(activity.cost)}</div>
     </div>
@@ -64,6 +67,32 @@ function formatEventTime(value: string, allDay: boolean) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Time TBD";
   return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(date);
+}
+
+function formatEventDuration(event: CalendarEvent) {
+  if (event.allDay) return "All day";
+  if (!event.end) return "End time TBD";
+  const start = new Date(event.start);
+  const end = new Date(event.end);
+  const minutes = Math.round((end.getTime() - start.getTime()) / 60_000);
+  if (!Number.isFinite(minutes) || minutes <= 0) return "End time TBD";
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return [hours ? `${hours}h` : "", remainder ? `${remainder}m` : ""].filter(Boolean).join(" ");
+}
+
+function eventToActivity(event: CalendarEvent): Activity {
+  const details = parseItineraryNotes(event.description);
+  return {
+    id: event.id,
+    title: event.title,
+    startTime: formatEventTime(event.start, event.allDay),
+    duration: formatEventDuration(event),
+    location: event.location,
+    website: event.url && /^https?:\/\//i.test(event.url) ? event.url : undefined,
+    cost: details.cost,
+    notes: details.notes,
+  };
 }
 
 function formatTripDate(value?: string) {
@@ -252,26 +281,55 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
   );
 }
 
-function ItineraryView() {
+function ItineraryView({ calendar }: { calendar: CalendarPayload | null }) {
+  const today = useCaliforniaDate();
+  const initialDay = itinerary.findIndex((day) => day.date === today);
+  const [selectedIndex, setSelectedIndex] = useState(initialDay >= 0 ? initialDay : 0);
+  const selectedDay = itinerary[selectedIndex];
+  const liveActivities = useMemo(
+    () => (calendar?.events ?? [])
+      .filter((event) => event.start.slice(0, 10) === selectedDay.date)
+      .map(eventToActivity),
+    [calendar, selectedDay.date],
+  );
+  const activities = liveActivities.length ? liveActivities : selectedDay.activities;
+  const isLive = liveActivities.length > 0;
+
   return (
     <div className="inner-page page-enter">
       <header className="page-title-row section-shell">
         <div><p className="eyebrow">DAY BY DAY</p><h1>The week,<br/><em>mapped out.</em></h1></div>
-        <div className="page-note"><span className="confirmed-tag"><i /> Main days confirmed</span><p>Destinations and dates are set. Activity times, costs, and meeting points remain open for planning.</p></div>
+        <div className="page-note"><span className="confirmed-tag"><i /> {calendar === null ? "Syncing iCloud" : calendar.configured ? "Live iCloud details" : "Calendar unavailable"}</span><p>Choose a day to see its activities. Times, notes, locations, websites, and costs flow from the shared calendar.</p></div>
       </header>
-      <section className="itinerary-list section-shell">
-        {itinerary.map((day) => (
-          <article className={`day-block tone-${day.tone}`} key={day.day}>
-            <header>
-              <div className="day-number"><small>DAY</small><strong>{String(day.day).padStart(2, "0")}</strong></div>
-              <div className="day-destination"><small>{formatTripDate(day.date)}</small><h2>{day.destination}</h2></div>
-              <span className="day-status">DATE SET</span>
-            </header>
-            <div className="activity-list">
-              {day.activities.map((activity) => <ActivityCard activity={activity} key={activity.id} />)}
-            </div>
-          </article>
-        ))}
+      <section className="itinerary-stage section-shell">
+        <div className="itinerary-piano" aria-label="Choose an itinerary day">
+          {itinerary.map((day, index) => (
+            <button
+              className={`piano-key tone-${day.tone} ${selectedIndex === index ? "active" : ""}`}
+              key={day.day}
+              type="button"
+              aria-pressed={selectedIndex === index}
+              aria-controls={`itinerary-day-${day.day}`}
+              onClick={() => setSelectedIndex(index)}
+            >
+              <small>DAY</small>
+              <strong>{String(day.day).padStart(2, "0")}</strong>
+              <time dateTime={day.date}>{new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(`${day.date}T12:00:00`))}</time>
+              <span>{day.destination}</span>
+            </button>
+          ))}
+        </div>
+
+        <article className={`day-block selected-day tone-${selectedDay.tone}`} id={`itinerary-day-${selectedDay.day}`} key={selectedDay.day}>
+          <header>
+            <div className="day-number"><small>DAY</small><strong>{String(selectedDay.day).padStart(2, "0")}</strong></div>
+            <div className="day-destination"><small>{formatTripDate(selectedDay.date)}</small><h2>{selectedDay.destination}</h2></div>
+            <span className="day-status">{isLive ? `${liveActivities.length} LIVE ${liveActivities.length === 1 ? "ACTIVITY" : "ACTIVITIES"}` : calendar === null ? "SYNCING" : "PLAN OPEN"}</span>
+          </header>
+          <div className="activity-list">
+            {activities.map((activity) => <ActivityCard activity={activity} key={activity.id} />)}
+          </div>
+        </article>
       </section>
     </div>
   );
@@ -312,7 +370,7 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
                       {events.map((event) => (
                         <article className="calendar-event" key={event.id}>
                           <div className="event-time">{formatEventTime(event.start, event.allDay)}{event.end && !event.allDay ? <small>— {formatEventTime(event.end, false)}</small> : null}</div>
-                          <div><h4>{event.title}</h4>{event.location && <p>⌖ {event.location}</p>}{event.description && <p>{event.description}</p>}</div>
+                          <div><h4>{event.title}</h4>{event.location && <p>⌖ {event.location}</p>}</div>
                         </article>
                       ))}
                     </div>
@@ -324,7 +382,7 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
             <div className="empty-agenda">
               <div className="empty-calendar-mark"><span>CAL</span><strong>—</strong></div>
               <h3>Live events will appear here</h3>
-              <p>No events are hardcoded. Once the public calendar link is added, date, time, title, location, and notes will flow into this agenda automatically.</p>
+              <p>No events are hardcoded. Once the public calendar link is added, date, time, title, and location will flow into this agenda automatically.</p>
               <div className="agenda-skeleton"><i/><i/><i/></div>
             </div>
           )}
@@ -339,7 +397,7 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
               <div className="calendar-live-count"><strong>{calendar.events.length}</strong><span>LIVE<br/>EVENTS</span></div>
               <ol>
                 <li><span>01</span><div><b>Edit in Apple Calendar</b><small>Use the existing shared trip calendar.</small></div></li>
-                <li><span>02</span><div><b>Changes refresh on reload</b><small>The server keeps a short five-minute cache.</small></div></li>
+                <li><span>02</span><div><b>Changes refresh on reload</b><small>Each full page load requests the latest iCloud feed.</small></div></li>
                 <li><span>03</span><div><b>Agenda stays protected</b><small>The calendar endpoint requires the Campfire Code cookie.</small></div></li>
               </ol>
               <div className="privacy-note"><b>Last checked</b><p>{calendar.syncedAt ? formatEventDate(calendar.syncedAt).full : "During this page visit"}</p></div>
@@ -422,7 +480,7 @@ export function TripDashboard() {
     if (navItems.some((item) => item.id === hash)) {
       queueMicrotask(() => setSection(hash));
     }
-    fetch(trip.calendar.apiPath)
+    fetch(trip.calendar.apiPath, { cache: "no-store" })
       .then((response) => response.json())
       .then((payload) => setCalendar(payload as CalendarPayload))
       .catch(() => setCalendar({ configured: false, events: [], message: "Calendar unavailable." }));
@@ -438,7 +496,7 @@ export function TripDashboard() {
     <main>
       <AppHeader section={section} onNavigate={navigate} />
       {section === "home" && <HomeView onNavigate={navigate} />}
-      {section === "itinerary" && <ItineraryView />}
+      {section === "itinerary" && <ItineraryView calendar={calendar} />}
       {section === "calendar" && <CalendarView calendar={calendar} />}
       {section === "guests" && <GuestsView />}
       <footer className="site-footer"><div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div><p>Made for good friends and better stories.</p></footer>

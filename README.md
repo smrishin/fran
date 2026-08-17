@@ -22,14 +22,28 @@ The app runs at `http://localhost:3000`.
 
 Keep real values in `.env.local`, which is ignored by Git. Before a future Sites deployment, add the same values through the hosted environment settings rather than committing them.
 
+## Updating itinerary details
+
+The shared iCloud calendar is the itinerary editor. For each event:
+
+- The event title becomes the activity name.
+- Start and end times become the activity time and duration.
+- The Location field becomes the meeting point.
+- The URL field becomes the activity website link.
+- Notes become the activity description.
+- A single notes line beginning with `cost` (case-insensitive) becomes the cost badge, for example `cost $20 per person`. Dashed forms such as `--cost $20 per person` are also accepted. The cost line is removed from the displayed description.
+
+The app requests a fresh copy from iCloud on every full page load. Apple may still take a short time to publish calendar changes to its public feed.
+
 ## Project shape
 
 - `components/TripDashboard.tsx` contains the responsive dashboard views and reusable cards.
 - `components/AccessGate.tsx` contains the Campfire Code entry experience.
-- `data/trip.ts` is the single source for the itinerary, guest list, and flights.
+- `data/trip.ts` is the source for the trip days, guest list, flights, and itinerary fallbacks.
 - `app/api/access/unlock/route.ts` validates the code server-side and issues the signed, HTTP-only access cookie.
 - `app/api/calendar/route.ts` serves calendar data only after a valid access cookie.
 - `lib/ics.ts` normalizes the iCloud feed into display-ready events.
+- `lib/itinerary.ts` extracts notes and costs for the detailed itinerary.
 - `lib/access.ts` creates and verifies time-limited access tokens.
 
 Booking confirmation and agency reference numbers are deliberately excluded from the app.
