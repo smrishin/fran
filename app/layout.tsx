@@ -7,7 +7,7 @@ const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Fog & Fire — California Trip Dashboard",
-  description: "A polished home base for one unforgettable California week.",
+  description: "A home base for one unforgettable California week.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

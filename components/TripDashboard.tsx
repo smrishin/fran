@@ -228,7 +228,7 @@ function TripDateCards() {
   if (today && today > trip.dates.end) {
     countdownLabel = "STATUS";
     countdownValue = "Trip complete";
-    countdownNote = "Nine days, well spent";
+    countdownNote = "Week well spent";
   }
 
   const featuredDay = currentDay ?? nextDay ?? lastDay;
@@ -303,7 +303,7 @@ function HomeView({ onNavigate }: { onNavigate: Navigate }) {
         <div className="hero-copy">
           <p className="eyebrow">OCT 24 — NOV 01 · CALIFORNIA ’26</p>
           <h1>City lights.<br/><em>Wild nights.</em></h1>
-          <p className="intro">Nine days from Big Sur to Tahoe, through the Bay, and everywhere worth remembering in between.</p>
+          <p className="intro">Big Sur to Tahoe, through the Bay, and everywhere worth remembering in between.</p>
           <div className="hero-actions">
             <button className="primary-button" onClick={() => onNavigate("itinerary")}>Explore the week <span>→</span></button>
             <span className="confirmed-tag"><i /> Dates locked</span>
@@ -351,7 +351,7 @@ function HomeView({ onNavigate }: { onNavigate: Navigate }) {
         </div>
 
         <div className="calendar-peek panel-lake">
-          <div><p className="eyebrow light">LIVE CALENDAR</p><h3>Your iCloud events,<br/>right where the plan lives.</h3></div>
+          <div><p className="eyebrow light">SHARED CALENDAR</p><h3>Current plans,<br/>updated from iCloud.</h3></div>
           <button onClick={() => onNavigate("calendar")}>Open calendar <span>→</span></button>
         </div>
       </section>
@@ -380,7 +380,7 @@ function ItineraryView({ calendar, selectedIndex, onSelect }: { calendar: Calend
     <div className="inner-page page-enter">
       <header className="page-title-row section-shell">
         <div><p className="eyebrow">DAY BY DAY</p><h1>The week,<br/><em>mapped out.</em></h1></div>
-        <div className="page-note"><span className="confirmed-tag"><i /> {calendar === null ? "Syncing iCloud" : calendar.configured ? "Live iCloud details" : "Calendar unavailable"}</span><p>Choose a day to see its activities. Times, notes, locations, websites, and costs flow from the shared calendar.</p></div>
+        <div className="page-note"><span className="confirmed-tag"><i /> {calendar === null ? "Syncing iCloud" : calendar.configured ? "Calendar connected" : "Calendar unavailable"}</span><p>Select a day to view its schedule, notes, location, contact details, and cost.</p></div>
       </header>
       <section className="itinerary-stage section-shell">
         <div className="itinerary-piano" aria-label="Choose an itinerary day">
@@ -432,7 +432,7 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
   return (
     <div className="inner-page page-enter">
       <header className="page-title-row section-shell calendar-title">
-        <div><p className="eyebrow">TRIP CALENDAR</p><h1>Every plan.<br/><em>One timeline.</em></h1></div>
+        <div><p className="eyebrow">TRIP CALENDAR</p><h1>Shared plans,<br/><em>in one place.</em></h1></div>
         <div className={`sync-status ${connected ? "connected" : ""}`}><span />{loading ? "Checking calendar…" : connected ? "iCloud calendar connected" : "Ready to connect"}</div>
       </header>
 
@@ -462,8 +462,8 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
           ) : (
             <div className="empty-agenda">
               <div className="empty-calendar-mark"><span>CAL</span><strong>—</strong></div>
-              <h3>Live events will appear here</h3>
-              <p>No events are hardcoded. Once the public calendar link is added, date, time, title, and location will flow into this agenda automatically.</p>
+              <h3>Calendar events will appear here</h3>
+              <p>Connect the shared iCloud calendar to display event dates, times, titles, and locations.</p>
               <div className="agenda-skeleton"><i/><i/><i/></div>
             </div>
           )}
@@ -473,12 +473,12 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
           {connected ? (
             <>
               <p className="eyebrow light">LIVE FROM ICLOUD</p>
-              <h2>Shared once.<br/><em>Kept in sync.</em></h2>
-              <p>The trip calendar is connected and currently serving {calendar.events.length} events to the private agenda.</p>
+              <h2>Connected.<br/><em>Up to date.</em></h2>
+              <p>Showing {calendar.events.length} events from the shared trip calendar.</p>
               <div className="calendar-live-count"><strong>{calendar.events.length}</strong><span>LIVE<br/>EVENTS</span></div>
               <ol>
                 <li><span>01</span><div><b>Edit in Apple Calendar</b><small>Use the existing shared trip calendar.</small></div></li>
-                <li><span>02</span><div><b>Changes refresh on reload</b><small>Each full page load requests the latest iCloud feed.</small></div></li>
+                <li><span>02</span><div><b>Refresh to update</b><small>Each page load requests the latest calendar.</small></div></li>
                 <li><span>03</span><div><b>Agenda stays protected</b><small>The calendar endpoint requires the Campfire Code cookie.</small></div></li>
               </ol>
               <div className="privacy-note"><b>Last checked</b><p>{calendar.syncedAt ? formatEventDate(calendar.syncedAt).full : "During this page visit"}</p></div>
@@ -486,8 +486,8 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
           ) : (
             <>
               <p className="eyebrow light">CALENDAR STATUS</p>
-              <h2>Share once.<br/><em>Stay in sync.</em></h2>
-              <p>The iCloud calendar is ready to appear here as soon as its server setting is available.</p>
+              <h2>Not connected.</h2>
+              <p>Add the public iCloud calendar setting to display shared events.</p>
             </>
           )}
         </aside>
@@ -536,7 +536,7 @@ function GuestsView() {
     <div className="inner-page page-enter">
       <header className="page-title-row section-shell">
         <div><p className="eyebrow">THE CREW</p><h1>Arrivals,<br/><em>all together.</em></h1></div>
-        <div className="page-note"><span className="confirmed-tag"><i /> 7 travelers</span><p>Hosts, home bases, and all currently confirmed flights are collected here. Booking reference numbers are intentionally excluded.</p></div>
+        <div className="page-note"><span className="confirmed-tag"><i /> 7 travelers</span><p>Arrival, departure, and home-base information for the group.</p></div>
       </header>
       <section className="guest-grid section-shell">
         {guests.map((guest, index) => (

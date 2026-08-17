@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const expectedCode = process.env.TRIP_ACCESS_CODE;
   const cookieSecret = process.env.TRIP_ACCESS_COOKIE_SECRET;
   if (!expectedCode || !cookieSecret) {
-    return Response.json({ ok: false, message: "The trail gate is not configured yet." }, { status: 503 });
+    return Response.json({ ok: false, message: "Private access is not configured yet." }, { status: 503 });
   }
 
   if (code !== expectedCode) {

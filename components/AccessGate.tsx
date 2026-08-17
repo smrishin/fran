@@ -20,12 +20,12 @@ export function AccessGate() {
       });
       const result = await response.json() as { ok?: boolean; message?: string };
       if (!response.ok || !result.ok) {
-        setMessage(result.message ?? "The trail gate stayed closed.");
+        setMessage(result.message ?? "That Campfire Code was not recognized.");
         return;
       }
       window.location.reload();
     } catch {
-      setMessage("The trail gate is unavailable. Try again in a moment.");
+      setMessage("Access could not be verified. Try again in a moment.");
     } finally {
       setSubmitting(false);
     }
@@ -39,8 +39,8 @@ export function AccessGate() {
           <span className="brand-mark" aria-hidden="true"><i /></span>
           <span><b>FOG &amp; FIRE</b><small>CALIFORNIA · ’26</small></span>
         </div>
-        <p className="eyebrow">PRIVATE TRAIL AHEAD</p>
-        <h1>Gather ’round.<br/><em>The fire’s inside.</em></h1>
+        <p className="eyebrow">PRIVATE TRIP DASHBOARD</p>
+        <h1>Welcome to<br/><em>Fog &amp; Fire.</em></h1>
         <p className="access-intro">Enter the group’s Campfire Code to open the trip dashboard.</p>
         <form onSubmit={unlock}>
           <label htmlFor="campfire-code">Campfire Code</label>
@@ -61,7 +61,7 @@ export function AccessGate() {
         </form>
         <p className="access-note" id="access-note">One successful code unlocks this device for seven days.</p>
       </section>
-      <footer className="access-footer"><span>OCT 24 — NOV 01</span><span>BIG SUR · TAHOE · THE BAY</span></footer>
+      <footer className="access-footer"><span>OCT 24 — NOV 01</span><span>CALIFORNIA · 2026</span></footer>
     </main>
   );
 }
