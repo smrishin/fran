@@ -32,6 +32,7 @@ The shared iCloud calendar is the itinerary editor. For each event:
 - The URL field becomes the activity website link.
 - Notes become the activity description.
 - A single notes line beginning with `cost` (case-insensitive) becomes the cost badge, for example `cost $20 per person`. Dashed forms such as `--cost $20 per person` are also accepted. The cost line is removed from the displayed description.
+- A notes line beginning with `phone` (case-insensitive), such as `phone +1 (831) 555-0123`, becomes a tap-to-call link and is removed from the displayed description. Dashed forms are accepted here too.
 
 The app requests a fresh copy from iCloud on every full page load. Apple may still take a short time to publish calendar changes to its public feed.
 

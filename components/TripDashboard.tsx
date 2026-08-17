@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type Guest } from "../data/trip";
 import type { CalendarEvent } from "../lib/ics";
 import { parseItineraryNotes } from "../lib/itinerary";
 import { ThemeToggle } from "./ThemeToggle";
 
 type Section = "home" | "itinerary" | "calendar" | "guests";
+type Navigate = (section: Section, itineraryIndex?: number) => void;
 type CalendarPayload = {
   configured: boolean;
   events: CalendarEvent[];
@@ -37,16 +38,83 @@ function costLabel(cost: Cost) {
   return "Cost TBD";
 }
 
+function appleMapsUrl(location: string) {
+  return `https://maps.apple.com/?q=${encodeURIComponent(location)}`;
+}
+
+function googleMapsUrl(location: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+}
+
+function telephoneUrl(phone: string) {
+  return `tel:${phone.replace(/[^\d+*#,;]/g, "")}`;
+}
+
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function MapLink({ location, className, children }: { location: string; className: string; children: ReactNode }) {
+  const [choosingMap, setChoosingMap] = useState(false);
+
+  useEffect(() => {
+    if (!choosingMap) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setChoosingMap(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [choosingMap]);
+
+  return (
+    <>
+      <a
+        className={className}
+        href={googleMapsUrl(location)}
+        target="_blank"
+        rel="noreferrer"
+        onClick={(click) => {
+          if (isIOSDevice()) {
+            click.preventDefault();
+            setChoosingMap(true);
+          }
+        }}
+      >{children}</a>
+      {choosingMap && (
+        <div className="map-choice-backdrop">
+          <button className="map-choice-dismiss" type="button" aria-label="Close map choices" onClick={() => setChoosingMap(false)} />
+          <div className="map-choice" role="dialog" aria-modal="true" aria-label={`Open ${location} in maps`}>
+            <small>OPEN LOCATION</small>
+            <h3>Choose your map</h3>
+            <p>{location}</p>
+            <div>
+              <a href={appleMapsUrl(location)} target="_blank" rel="noreferrer" onClick={() => setChoosingMap(false)}>Apple Maps <span>↗</span></a>
+              <a href={googleMapsUrl(location)} target="_blank" rel="noreferrer" onClick={() => setChoosingMap(false)}>Google Maps <span>↗</span></a>
+              <button type="button" onClick={() => setChoosingMap(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function ActivityCard({ activity }: { activity: Activity }) {
   return (
     <div className="activity-card">
       <div className="activity-time"><span>{activity.startTime ?? "TBD"}</span><small>{activity.duration ?? "Duration TBD"}</small></div>
       <div className="activity-copy">
         <h3>{activity.title}</h3>
-        <p>{activity.location ?? "Location TBD"}</p>
         {activity.notes && <small>{activity.notes}</small>}
-        {activity.website && <a href={activity.website} target="_blank" rel="noreferrer">Visit website <span>↗</span></a>}
       </div>
+      <div className="activity-actions">
+        {activity.website && <a href={activity.website} target="_blank" rel="noreferrer">Visit website <span>↗</span></a>}
+        {activity.phone && <a href={telephoneUrl(activity.phone)}>Call {activity.phone} <span>↗</span></a>}
+      </div>
+      {activity.location
+        ? <MapLink location={activity.location} className="activity-location">⌖ {activity.location} <span>↗</span></MapLink>
+        : <span className="activity-location activity-location-empty">Location TBD</span>}
       <div className={`cost-chip ${activity.cost.kind}`}>{costLabel(activity.cost)}</div>
     </div>
   );
@@ -90,6 +158,7 @@ function eventToActivity(event: CalendarEvent): Activity {
     duration: formatEventDuration(event),
     location: event.location,
     website: event.url && /^https?:\/\//i.test(event.url) ? event.url : undefined,
+    phone: details.phone,
     cost: details.cost,
     notes: details.notes,
   };
@@ -101,20 +170,29 @@ function formatTripDate(value?: string) {
   return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(date);
 }
 
+function californiaDateString(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
+function suggestedItineraryIndex(today = californiaDateString()) {
+  const currentIndex = itinerary.findIndex((day) => day.date === today);
+  if (currentIndex >= 0) return currentIndex;
+  const nextIndex = itinerary.findIndex((day) => day.date > today);
+  return nextIndex >= 0 ? nextIndex : itinerary.length - 1;
+}
+
 function useCaliforniaDate() {
   const [today, setToday] = useState("");
 
   useEffect(() => {
-    const update = () => {
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Los_Angeles",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).formatToParts(new Date());
-      const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-      setToday(`${value.year}-${value.month}-${value.day}`);
-    };
+    const update = () => setToday(californiaDateString());
     queueMicrotask(update);
     const timer = window.setInterval(update, 60_000);
     return () => window.clearInterval(timer);
@@ -185,7 +263,7 @@ function NextPlannedCard() {
   );
 }
 
-function AppHeader({ section, onNavigate }: { section: Section; onNavigate: (section: Section) => void }) {
+function AppHeader({ section, onNavigate }: { section: Section; onNavigate: Navigate }) {
   return (
     <>
       <header className="site-header">
@@ -216,7 +294,7 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: (sec
   );
 }
 
-function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
+function HomeView({ onNavigate }: { onNavigate: Navigate }) {
   const weekStops = ["Big Sur", "Santa Cruz", "Lake Tahoe", "San Francisco", "Sunnyvale"];
 
   return (
@@ -255,8 +333,8 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
         <div className="week-peek panel-dark">
           <div className="panel-heading"><div><p className="eyebrow light">THE ADVENTURE</p><h2>Nine days.<br/><em>Zero ordinary.</em></h2></div><button onClick={() => onNavigate("itinerary")}>Full plan →</button></div>
           <div className="mini-days">
-            {itinerary.map((day) => (
-              <button key={day.day} onClick={() => onNavigate("itinerary")}>
+            {itinerary.map((day, index) => (
+              <button key={day.day} onClick={() => onNavigate("itinerary", index)}>
                 <small>DAY</small><strong>{String(day.day).padStart(2, "0")}</strong><span>{day.destination}</span>
               </button>
             ))}
@@ -281,10 +359,13 @@ function HomeView({ onNavigate }: { onNavigate: (section: Section) => void }) {
   );
 }
 
-function ItineraryView({ calendar }: { calendar: CalendarPayload | null }) {
+function ItineraryView({ calendar, selectedIndex, onSelect }: { calendar: CalendarPayload | null; selectedIndex: number; onSelect: (index: number) => void }) {
   const today = useCaliforniaDate();
-  const initialDay = itinerary.findIndex((day) => day.date === today);
-  const [selectedIndex, setSelectedIndex] = useState(initialDay >= 0 ? initialDay : 0);
+  const menuStartIndex = today ? suggestedItineraryIndex(today) : 0;
+  const orderedDays = itinerary.map((_, offset) => {
+    const originalIndex = (menuStartIndex + offset) % itinerary.length;
+    return { day: itinerary[originalIndex], originalIndex };
+  });
   const selectedDay = itinerary[selectedIndex];
   const liveActivities = useMemo(
     () => (calendar?.events ?? [])
@@ -303,14 +384,14 @@ function ItineraryView({ calendar }: { calendar: CalendarPayload | null }) {
       </header>
       <section className="itinerary-stage section-shell">
         <div className="itinerary-piano" aria-label="Choose an itinerary day">
-          {itinerary.map((day, index) => (
+          {orderedDays.map(({ day, originalIndex }) => (
             <button
-              className={`piano-key tone-${day.tone} ${selectedIndex === index ? "active" : ""}`}
+              className={`piano-key tone-${day.tone} ${selectedIndex === originalIndex ? "active" : ""}`}
               key={day.day}
               type="button"
-              aria-pressed={selectedIndex === index}
+              aria-pressed={selectedIndex === originalIndex}
               aria-controls={`itinerary-day-${day.day}`}
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => onSelect(originalIndex)}
             >
               <small>DAY</small>
               <strong>{String(day.day).padStart(2, "0")}</strong>
@@ -370,7 +451,7 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
                       {events.map((event) => (
                         <article className="calendar-event" key={event.id}>
                           <div className="event-time">{formatEventTime(event.start, event.allDay)}{event.end && !event.allDay ? <small>— {formatEventTime(event.end, false)}</small> : null}</div>
-                          <div><h4>{event.title}</h4>{event.location && <p>⌖ {event.location}</p>}</div>
+                          <div><h4>{event.title}</h4>{event.location && <MapLink location={event.location} className="calendar-location">⌖ {event.location} ↗</MapLink>}</div>
                         </article>
                       ))}
                     </div>
@@ -474,11 +555,15 @@ function GuestsView() {
 export function TripDashboard() {
   const [section, setSection] = useState<Section>("home");
   const [calendar, setCalendar] = useState<CalendarPayload | null>(null);
+  const [selectedItineraryIndex, setSelectedItineraryIndex] = useState(0);
 
   useEffect(() => {
     const hash = window.location.hash.slice(1) as Section;
     if (navItems.some((item) => item.id === hash)) {
-      queueMicrotask(() => setSection(hash));
+      queueMicrotask(() => {
+        setSection(hash);
+        if (hash === "itinerary") setSelectedItineraryIndex(suggestedItineraryIndex());
+      });
     }
     fetch(trip.calendar.apiPath, { cache: "no-store" })
       .then((response) => response.json())
@@ -486,7 +571,10 @@ export function TripDashboard() {
       .catch(() => setCalendar({ configured: false, events: [], message: "Calendar unavailable." }));
   }, []);
 
-  const navigate = (next: Section) => {
+  const navigate: Navigate = (next, itineraryIndex) => {
+    if (next === "itinerary") {
+      setSelectedItineraryIndex(itineraryIndex ?? suggestedItineraryIndex());
+    }
     setSection(next);
     window.history.replaceState(null, "", next === "home" ? window.location.pathname : `#${next}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -496,7 +584,7 @@ export function TripDashboard() {
     <main>
       <AppHeader section={section} onNavigate={navigate} />
       {section === "home" && <HomeView onNavigate={navigate} />}
-      {section === "itinerary" && <ItineraryView calendar={calendar} />}
+      {section === "itinerary" && <ItineraryView calendar={calendar} selectedIndex={selectedItineraryIndex} onSelect={setSelectedItineraryIndex} />}
       {section === "calendar" && <CalendarView calendar={calendar} />}
       {section === "guests" && <GuestsView />}
       <footer className="site-footer"><div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div><p>Made for good friends and better stories.</p></footer>

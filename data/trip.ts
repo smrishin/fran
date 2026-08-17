@@ -12,6 +12,7 @@ export type Activity = {
   duration?: string;
   location?: string;
   website?: string;
+  phone?: string;
   cost: Cost;
   notes?: string;
   placeholder?: boolean;

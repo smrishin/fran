@@ -29,3 +29,10 @@ test("accepts dashed cost lines", () => {
   assert.deepEqual(details.cost, { kind: "custom", label: "$180 for the group" });
   assert.equal(details.notes, "Boats are reserved.");
 });
+
+test("extracts a case-insensitive phone line and keeps it out of notes", () => {
+  const details = parseItineraryNotes("Ask for the group table.\n--PHONE: +1 (831) 555-0123");
+
+  assert.equal(details.phone, "+1 (831) 555-0123");
+  assert.equal(details.notes, "Ask for the group table.");
+});
