@@ -5,8 +5,9 @@ import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type
 import type { CalendarEvent } from "../lib/ics";
 import { parseItineraryNotes } from "../lib/itinerary";
 import { ThemeToggle } from "./ThemeToggle";
+import { QuestView } from "./QuestView";
 
-type Section = "home" | "itinerary" | "calendar" | "guests";
+type Section = "home" | "itinerary" | "calendar" | "quest" | "guests";
 type Navigate = (section: Section, itineraryIndex?: number, activityId?: string) => void;
 type CalendarPayload = {
   configured: boolean;
@@ -15,11 +16,12 @@ type CalendarPayload = {
   syncedAt?: string;
 };
 
-const navItems: { id: Section; label: string; short: string }[] = [
-  { id: "home", label: "Home", short: "Home" },
-  { id: "itinerary", label: "Itinerary", short: "Plan" },
-  { id: "calendar", label: "Calendar", short: "Dates" },
-  { id: "guests", label: "Guests", short: "Crew" },
+const navItems: { id: Section; label: string; short: string; icon: string }[] = [
+  { id: "home", label: "Home", short: "Home", icon: "⌂" },
+  { id: "itinerary", label: "Itinerary", short: "Plan", icon: "≡" },
+  { id: "calendar", label: "Calendar", short: "Dates", icon: "□" },
+  { id: "quest", label: "Quest", short: "Quest", icon: "✦" },
+  { id: "guests", label: "Guests", short: "Crew", icon: "●" },
 ];
 
 const mobileNavItems = navItems.filter((item) => item.id !== "guests");
@@ -350,9 +352,9 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: Navi
         </div>
       </header>
       <nav className="mobile-nav" aria-label="Mobile navigation">
-        {mobileNavItems.map((item, index) => (
+        {mobileNavItems.map((item) => (
           <button key={item.id} className={section === item.id ? "active" : ""} onClick={() => onNavigate(item.id)}>
-            <span>{index === 0 ? "⌂" : index === 1 ? "≡" : "□"}</span>{item.short}
+            <span>{item.icon}</span>{item.short}
           </button>
         ))}
       </nav>
@@ -684,6 +686,7 @@ export function TripDashboard() {
       {section === "home" && <HomeView onNavigate={navigate} calendar={calendar} />}
       {section === "itinerary" && <ItineraryView calendar={calendar} selectedIndex={selectedItineraryIndex} selectedActivityId={selectedActivityId} onSelect={(index) => { setSelectedItineraryIndex(index); setSelectedActivityId(null); }} />}
       {section === "calendar" && <CalendarView calendar={calendar} onNavigate={navigate} />}
+      {section === "quest" && <QuestView />}
       {section === "guests" && <GuestsView />}
       <footer className="site-footer">
         <div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div>
