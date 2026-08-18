@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Proof previews and protected R2 images are dynamic user uploads. */
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { questTasks, type QuestCompletion, type QuestTask } from "../data/quest";
 import { guests, type Guest } from "../data/trip";
@@ -17,6 +17,13 @@ function formatMemoryDate(value: string) {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+}
+
+function formatMemoryStamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "CALIFORNIA";
+  const month = new Intl.DateTimeFormat("en-US", { month: "short" }).format(date).toUpperCase();
+  return `${month} ’${String(date.getFullYear()).slice(-2)}`;
 }
 
 function useModalDismiss(onClose: () => void) {
@@ -154,12 +161,43 @@ function ProofComposer({ task, player, onClose, onSaved }: {
   );
 }
 
-function MemoryLightbox({ completion, onClose }: { completion: QuestCompletion; onClose: () => void }) {
+function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNext }: {
+  completion: QuestCompletion;
+  position: number;
+  total: number;
+  onClose: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
+  const touchStart = useRef<number | null>(null);
   const taskTitle = questTasks.find((task) => task.id === completion.taskId)?.title ?? "Quest memory";
 
   useModalDismiss(onClose);
+
+  useEffect(() => {
+    const navigateWithKeyboard = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") onPrevious();
+      if (event.key === "ArrowRight") onNext();
+    };
+
+    window.addEventListener("keydown", navigateWithKeyboard);
+    return () => window.removeEventListener("keydown", navigateWithKeyboard);
+  }, [onNext, onPrevious]);
+
+  const beginSwipe = (event: TouchEvent<HTMLDivElement>) => {
+    touchStart.current = event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const finishSwipe = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchStart.current === null) return;
+    const distance = (event.changedTouches[0]?.clientX ?? touchStart.current) - touchStart.current;
+    touchStart.current = null;
+    if (Math.abs(distance) < 54) return;
+    if (distance > 0) onPrevious();
+    else onNext();
+  };
 
   const savePhoto = async () => {
     setSaveStatus("saving");
@@ -210,8 +248,13 @@ function MemoryLightbox({ completion, onClose }: { completion: QuestCompletion; 
       <button className="quest-lightbox-dismiss" type="button" aria-label="Close memory" onClick={onClose} />
       <article className="quest-lightbox-frame">
         <button className="quest-lightbox-close" type="button" aria-label="Close photo" onClick={onClose}>×</button>
-        <div className="quest-lightbox-photo">
+        <div className="quest-lightbox-photo" onTouchStart={beginSwipe} onTouchEnd={finishSwipe}>
+          <button className="quest-lightbox-photo-dismiss" type="button" aria-label="Close memory" onClick={onClose} />
           <img src={completion.photoUrl} alt={`${completion.playerName}'s Quest memory`} />
+          {total > 1 && <div className="quest-lightbox-side-nav" aria-label="Memory navigation">
+            <button type="button" aria-label="Previous memory" onClick={onPrevious}>←</button>
+            <button type="button" aria-label="Next memory" onClick={onNext}>→</button>
+          </div>}
         </div>
         <footer className="quest-lightbox-details">
           <div className="quest-lightbox-copy">
@@ -219,6 +262,7 @@ function MemoryLightbox({ completion, onClose }: { completion: QuestCompletion; 
             <h2 id="quest-memory-title">{taskTitle}</h2>
             <time dateTime={completion.completedAt}>{formatMemoryDate(completion.completedAt)}</time>
           </div>
+          <div className="quest-lightbox-position" aria-live="polite"><span>{String(position).padStart(2, "0")}</span><i>/</i>{String(total).padStart(2, "0")}</div>
           <div className="quest-lightbox-actions">
             <button type="button" onClick={savePhoto} disabled={saveStatus === "saving"}>
               {saveStatus === "saving" ? "Preparing photo…" : "Save photo ↓"}
@@ -234,20 +278,63 @@ function MemoryLightbox({ completion, onClose }: { completion: QuestCompletion; 
 }
 
 function GlowReel({ completions, onOpen }: { completions: QuestCompletion[]; onOpen: (completion: QuestCompletion) => void }) {
+  const PAGE_SIZE = 10;
   const tasks = useMemo(() => new Map(questTasks.map((task) => [task.id, task])), []);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loadMore = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const target = loadMore.current;
+    if (!target || visibleCount >= completions.length) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisibleCount((count) => Math.min(count + PAGE_SIZE, completions.length));
+      }
+    }, { rootMargin: "420px 0px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [completions.length, visibleCount]);
+
   if (!completions.length) {
     return <div className="quest-gallery-empty"><span>✦</span><h3>The Glow Reel starts with the first adventure.</h3><p>Completed challenges will collect here as a shared trip scrapbook.</p></div>;
   }
 
+  const visibleCompletions = completions.slice(0, visibleCount);
+  const gallerySize = completions.length === 1 ? "gallery-one" : completions.length === 2 ? "gallery-two" : completions.length < 5 ? "gallery-few" : "gallery-many";
+
   return (
-    <div className="quest-gallery">
-      {completions.map((completion, index) => (
-        <button className={`quest-memory tilt-${index % 4}`} type="button" key={completion.id} onClick={() => onOpen(completion)}>
-          <div className="quest-memory-photo"><img src={completion.photoUrl} alt={`${completion.playerName}'s proof for ${tasks.get(completion.taskId)?.title ?? "a Quest challenge"}`} loading="lazy" /><span aria-hidden="true">{index % 3 === 0 ? "GOOD TIMES" : index % 3 === 1 ? "CALIFORNIA ’26" : "FOG & FIRE"}</span></div>
-          <div><b>{completion.playerName}</b><h3>{tasks.get(completion.taskId)?.title ?? completion.taskId}</h3><time dateTime={completion.completedAt}>{formatMemoryDate(completion.completedAt)}</time></div>
-        </button>
-      ))}
-    </div>
+    <section className={`quest-scrapbook ${gallerySize}`}>
+      <header className="quest-reel-heading">
+        <div><small>TRIP SCRAPBOOK · CALIFORNIA ’26</small><h2>Moments from the road.</h2></div>
+        <p><b>{Math.min(visibleCount, completions.length)}</b> of {completions.length} memories on the table</p>
+      </header>
+      <div className="quest-reel-canvas">
+        <span className="quest-fog-mark" aria-hidden="true">fog<br/>↝↝</span>
+        <span className="quest-fire-mark" aria-hidden="true">✦</span>
+        <div className="quest-gallery">
+          {visibleCompletions.map((completion, index) => (
+            <button className={`quest-memory tilt-${index % 6} memory-size-${index % 5}`} type="button" key={completion.id} onClick={() => onOpen(completion)}>
+              <span className="quest-memory-tape" aria-hidden="true" />
+              <div className="quest-memory-photo">
+                <img src={completion.photoUrl} alt={`${completion.playerName}'s memory from ${tasks.get(completion.taskId)?.title ?? "a Quest challenge"}`} loading={index < 4 ? "eager" : "lazy"} />
+                <span className="quest-memory-stamp" aria-hidden="true">CALIFORNIA<br/>{formatMemoryStamp(completion.completedAt)}</span>
+                <div className="quest-memory-caption">
+                  <small>{completion.playerName}</small>
+                  <h3>{tasks.get(completion.taskId)?.title ?? completion.taskId}</h3>
+                  <time dateTime={completion.completedAt}>{formatMemoryDate(completion.completedAt)}</time>
+                </div>
+              </div>
+              <span className="quest-memory-note" aria-hidden="true">{index % 3 === 0 ? "good times" : index % 3 === 1 ? "worth the detour" : "fog & fire"}</span>
+            </button>
+          ))}
+        </div>
+        {visibleCount < completions.length && (
+          <button ref={loadMore} className="quest-load-more" type="button" onClick={() => setVisibleCount((count) => Math.min(count + PAGE_SIZE, completions.length))}>
+            <span>More memories ahead</span><i>keep scrolling ↓</i>
+          </button>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -298,6 +385,16 @@ export function QuestView() {
     setCompletions((current) => [completion, ...current.filter((item) => item.id !== completion.id)]);
   };
 
+  const lightboxIndex = lightbox ? completions.findIndex((completion) => completion.id === lightbox.id) : -1;
+  const showPreviousMemory = () => {
+    if (lightboxIndex < 0 || completions.length < 2) return;
+    setLightbox(completions[(lightboxIndex - 1 + completions.length) % completions.length]);
+  };
+  const showNextMemory = () => {
+    if (lightboxIndex < 0 || completions.length < 2) return;
+    setLightbox(completions[(lightboxIndex + 1) % completions.length]);
+  };
+
   if (!playerReady) return <div className="quest-loading section-shell">Preparing Quest…</div>;
   if (!player) return <PlayerPicker onChoose={choosePlayer} />;
 
@@ -337,7 +434,7 @@ export function QuestView() {
       </section>
 
       {activeTask && <ProofComposer task={activeTask} player={player} onClose={() => setActiveTask(null)} onSaved={saved} />}
-      {lightbox && <MemoryLightbox completion={lightbox} onClose={() => setLightbox(null)} />}
+      {lightbox && <MemoryLightbox key={lightbox.id} completion={lightbox} position={lightboxIndex + 1} total={completions.length} onClose={() => setLightbox(null)} onPrevious={showPreviousMemory} onNext={showNextMemory} />}
     </div>
   );
 }

@@ -97,3 +97,15 @@ test("Quest modals dismiss cleanly and memories can be saved", async () => {
   assert.match(questView, /link\.download = file\.name/);
   assert.match(questView, /Save photo/);
 });
+
+test("Glow Reel progressively reveals memories and supports gallery navigation", async () => {
+  const questView = await readFile(new URL("../components/QuestView.tsx", import.meta.url), "utf8");
+
+  assert.match(questView, /PAGE_SIZE = 10/);
+  assert.match(questView, /IntersectionObserver/);
+  assert.match(questView, /completions\.slice\(0, visibleCount\)/);
+  assert.match(questView, /Previous memory/);
+  assert.match(questView, /Next memory/);
+  assert.match(questView, /ArrowLeft/);
+  assert.match(questView, /beginSwipe/);
+});

@@ -218,17 +218,37 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .quest-gallery-empty > span { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; background: var(--coral); color: white; font-size: 22px; box-shadow: 0 0 0 10px rgba(239,101,74,.09); }
 .quest-gallery-empty h3 { max-width: 410px; margin: 24px 0 8px; font-family: Georgia, serif; font-size: 26px; font-style: italic; }
 .quest-gallery-empty p { margin: 0; font-size: 11px; opacity: .52; }
-.quest-gallery { padding: 16px 12px 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px 24px; }
-.quest-memory { padding: 11px 11px 18px; border: 0; background: #fffdf7; color: #252b28; text-align: left; cursor: zoom-in; box-shadow: 0 12px 28px rgba(42,35,27,.14); transition: .25s ease; }
-.quest-memory:hover { z-index: 2; transform: rotate(0) translateY(-5px) !important; box-shadow: 0 18px 38px rgba(42,35,27,.2); }
-.quest-memory.tilt-0 { transform: rotate(-1.4deg); }.quest-memory.tilt-1 { transform: rotate(1.1deg); }.quest-memory.tilt-2 { transform: rotate(-.5deg); }.quest-memory.tilt-3 { transform: rotate(1.8deg); }
-.quest-memory-photo { aspect-ratio: 4 / 3; background: #dedbd1; position: relative; overflow: hidden; }
-.quest-memory-photo img { width: 100%; height: 100%; display: block; object-fit: cover; }
-.quest-memory-photo span { position: absolute; right: 8px; bottom: 8px; padding: 4px 6px; background: rgba(28,37,34,.78); color: white; font-family: var(--font-mono); font-size: 6px; letter-spacing: .1em; }
-.quest-memory > div:last-child { padding: 15px 5px 0; }
-.quest-memory b { color: var(--coral); font-family: var(--font-mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
-.quest-memory h3 { margin: 6px 0 12px; font-family: Georgia, serif; font-size: 19px; font-style: italic; }
-.quest-memory time { font-family: var(--font-mono); font-size: 7px; opacity: .45; }
+.quest-scrapbook { margin: -28px; background: #e9e3d8; color: #252b28; overflow: hidden; }
+.quest-reel-heading { padding: 30px clamp(24px, 4vw, 52px) 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; border-bottom: 1px solid rgba(42,35,27,.12); background: rgba(255,253,247,.54); }
+.quest-reel-heading small { font-family: var(--font-mono); font-size: 7px; font-weight: 700; letter-spacing: .16em; color: var(--coral); }
+.quest-reel-heading h2 { margin-top: 7px; font-family: Georgia, serif; font-size: clamp(27px, 3.4vw, 43px); font-style: italic; font-weight: 400; letter-spacing: -.03em; }
+.quest-reel-heading p { font-family: var(--font-mono); font-size: 7px; letter-spacing: .08em; text-transform: uppercase; opacity: .5; }
+.quest-reel-heading p b { color: var(--coral); font-size: 16px; }
+.quest-reel-canvas { min-height: 430px; padding: clamp(46px, 6vw, 82px) clamp(25px, 5vw, 70px) 62px; position: relative; background-color: #e9e3d8; background-image: radial-gradient(circle at 16% 18%, rgba(255,255,255,.7) 0 1px, transparent 1.5px), linear-gradient(112deg, transparent 49.6%, rgba(67,60,50,.035) 50%, transparent 50.4%); background-size: 18px 18px, 100% 100%; }
+.quest-fog-mark { position: absolute; left: 19px; top: 18px; color: var(--lake); font-family: "Bradley Hand", "Segoe Print", cursive; font-size: 12px; line-height: .8; opacity: .38; transform: rotate(-7deg); }
+.quest-fire-mark { width: 34px; height: 34px; position: absolute; right: 24px; top: 30px; display: grid; place-items: center; border: 1px solid rgba(239,101,74,.3); border-radius: 50%; color: var(--coral); font-size: 12px; transform: rotate(9deg); }
+.quest-gallery { width: 100%; columns: 3 250px; column-gap: clamp(20px, 3vw, 38px); }
+.quest-memory { width: 96%; margin: 0 2% clamp(34px, 5vw, 62px); padding: 9px; display: inline-block; break-inside: avoid; border: 0; background: #fffdf7; color: white; text-align: left; cursor: zoom-in; box-shadow: 0 15px 35px rgba(57,48,38,.19), 0 1px 2px rgba(57,48,38,.2); position: relative; transition: transform .25s ease, box-shadow .25s ease; }
+.quest-memory:hover { z-index: 2; transform: rotate(0) translateY(-7px) scale(1.015) !important; box-shadow: 0 23px 48px rgba(57,48,38,.25); }
+.quest-memory:focus-visible { outline: 3px solid var(--coral); outline-offset: 5px; }
+.quest-memory.tilt-0 { transform: rotate(-1.8deg); }.quest-memory.tilt-1 { transform: rotate(1.25deg); }.quest-memory.tilt-2 { transform: rotate(-.65deg); }.quest-memory.tilt-3 { transform: rotate(2deg); }.quest-memory.tilt-4 { transform: rotate(-1.1deg); }.quest-memory.tilt-5 { transform: rotate(.55deg); }
+.quest-memory.memory-size-1 { width: 88%; margin-left: 10%; }.quest-memory.memory-size-2 { width: 93%; }.quest-memory.memory-size-3 { width: 90%; margin-left: 1%; }.quest-memory.memory-size-4 { width: 98%; }
+.quest-memory-photo { background: #cfc9bc; position: relative; overflow: hidden; }
+.quest-memory-photo::after { content: ""; position: absolute; inset: 38% 0 0; background: linear-gradient(transparent, rgba(10,15,13,.8)); pointer-events: none; }
+.quest-memory-photo img { width: 100%; height: auto; display: block; }
+.quest-memory-tape { z-index: 2; width: 68px; height: 19px; position: absolute; left: 50%; top: -8px; background: rgba(217,202,165,.72); box-shadow: inset 0 0 0 1px rgba(97,80,50,.07); transform: translateX(-50%) rotate(-2deg); backdrop-filter: blur(2px); pointer-events: none; }
+.quest-memory:nth-child(3n + 2) .quest-memory-tape { left: 22%; transform: translateX(-50%) rotate(4deg); }.quest-memory:nth-child(4n) .quest-memory-tape { left: 76%; background: rgba(200,220,209,.72); }
+.quest-memory-stamp { z-index: 2; position: absolute; right: 10px; top: 10px; padding: 5px 7px; border: 1px solid rgba(255,255,255,.46); border-radius: 2px; color: white; font-family: var(--font-mono); font-size: 5px; font-weight: 700; line-height: 1.45; letter-spacing: .14em; text-align: center; transform: rotate(2deg); opacity: .78; text-shadow: 0 1px 5px rgba(0,0,0,.45); }
+.quest-memory-caption { z-index: 2; position: absolute; left: 0; right: 0; bottom: 0; padding: 42px 13px 12px; }
+.quest-memory-caption small { display: block; color: #ffc1b3; font-family: var(--font-mono); font-size: 6px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.quest-memory-caption h3 { margin: 4px 0 5px; color: white; font-family: Georgia, serif; font-size: clamp(17px, 2vw, 23px); font-style: italic; font-weight: 400; line-height: 1.08; text-shadow: 0 1px 9px rgba(0,0,0,.45); }
+.quest-memory-caption time { color: white; font-family: var(--font-mono); font-size: 6px; opacity: .62; }
+.quest-memory-note { display: block; min-height: 15px; padding: 6px 3px 0; color: #6a6157; font-family: "Bradley Hand", "Segoe Print", cursive; font-size: 10px; line-height: 1; text-align: right; opacity: .72; transform: rotate(-1deg); }
+.gallery-one .quest-gallery { max-width: 690px; margin-inline: auto; columns: 1; }.gallery-one .quest-memory { width: 82%; margin: 0 9%; }
+.gallery-two .quest-gallery { max-width: 1040px; margin-inline: auto; columns: 2; }.gallery-two .quest-memory:nth-child(2) { margin-top: 72px; }
+.gallery-few .quest-gallery { max-width: 1080px; margin-inline: auto; columns: 2; }
+.quest-load-more { width: min(240px, 100%); margin: 5px auto 0; padding: 17px 20px; display: grid; gap: 3px; border: 1px dashed rgba(42,35,27,.22); border-radius: 50%; background: rgba(255,253,247,.42); color: var(--ink); cursor: pointer; transform: rotate(-1deg); }
+.quest-load-more span { font-family: Georgia, serif; font-size: 14px; font-style: italic; }.quest-load-more i { font-family: var(--font-mono); font-size: 6px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; opacity: .48; }
 .quest-modal { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; }
 .quest-modal-dismiss { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(10,15,13,.72); backdrop-filter: blur(7px); cursor: default; }
 .quest-proof-card { z-index: 1; width: min(560px, 100%); max-height: calc(100svh - 40px); padding: 27px; border-radius: 9px; background: var(--paper); color: var(--ink); overflow-y: auto; box-shadow: 0 28px 80px rgba(0,0,0,.35); }
@@ -253,12 +273,17 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .quest-lightbox-dismiss { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(10,15,13,.94); backdrop-filter: blur(8px); cursor: zoom-out; }
 .quest-lightbox-frame { z-index: 1; width: min(1080px, 100%); height: min(820px, calc(100svh - clamp(40px, 8vw, 108px))); min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: #111815; overflow: hidden; box-shadow: 0 28px 90px rgba(0,0,0,.52); position: relative; }
 .quest-lightbox-close { z-index: 2; position: absolute; right: 14px; top: 14px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.32); border-radius: 50%; background: rgba(10,15,13,.66); color: white; font-size: 26px; line-height: 1; cursor: pointer; backdrop-filter: blur(6px); }
-.quest-lightbox-photo { min-height: 0; padding: 22px; display: grid; place-items: center; cursor: zoom-out; overflow: hidden; }
-.quest-lightbox-photo img { max-width: 100%; max-height: 100%; display: block; object-fit: contain; border-radius: 3px; box-shadow: 0 18px 60px rgba(0,0,0,.5); cursor: default; }
+.quest-lightbox-photo { min-height: 0; padding: 22px; display: grid; place-items: center; cursor: zoom-out; overflow: hidden; position: relative; touch-action: pan-y; }
+.quest-lightbox-photo-dismiss { position: absolute; inset: 0; border: 0; background: transparent; cursor: zoom-out; }
+.quest-lightbox-photo img { z-index: 1; max-width: 100%; max-height: 100%; display: block; object-fit: contain; border-radius: 3px; box-shadow: 0 18px 60px rgba(0,0,0,.5); cursor: default; }
+.quest-lightbox-side-nav { z-index: 2; position: absolute; left: 14px; right: 14px; top: 50%; display: flex; justify-content: space-between; pointer-events: none; transform: translateY(-50%); }
+.quest-lightbox-side-nav button { width: 46px; height: 46px; border: 1px solid rgba(255,255,255,.26); border-radius: 50%; background: rgba(10,15,13,.66); color: white; font-size: 19px; cursor: pointer; pointer-events: auto; backdrop-filter: blur(6px); }
 .quest-lightbox-details { padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid rgba(255,255,255,.1); background: #18211d; }
 .quest-lightbox-copy small { display: block; color: var(--coral); font-family: var(--font-mono); font-size: 7px; font-weight: 700; letter-spacing: .12em; }
 .quest-lightbox-copy h2 { margin-top: 5px; color: white; font-family: Georgia, serif; font-size: 24px; font-style: italic; font-weight: 400; }
 .quest-lightbox-copy time { display: block; margin-top: 7px; font-family: var(--font-mono); font-size: 7px; opacity: .5; }
+.quest-lightbox-position { min-width: 80px; display: flex; align-items: baseline; justify-content: center; gap: 6px; font-family: var(--font-mono); font-size: 8px; opacity: .5; }
+.quest-lightbox-position span { color: var(--coral); font-family: Georgia, serif; font-size: 25px; font-style: italic; }.quest-lightbox-position i { font-family: Georgia, serif; font-size: 15px; font-style: italic; }
 .quest-lightbox-actions { min-width: 170px; display: grid; justify-items: stretch; gap: 6px; }
 .quest-lightbox-actions button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 5px; background: var(--coral); color: white; font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
 .quest-lightbox-actions button:disabled { opacity: .6; cursor: wait; }
@@ -486,7 +511,7 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .activity-location { justify-self: start; justify-content: flex-start; text-align: left; }
   .quest-picker { grid-template-columns: 1fr; }
   .quest-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .quest-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quest-gallery { columns: 2 240px; }
 }
 
 @media (max-width: 820px) {
@@ -573,8 +598,17 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .quest-board { grid-template-columns: 1fr; gap: 10px; }
   .quest-task { min-height: 196px; padding: 18px; }
   .quest-task small { margin-top: 15px; }
-  .quest-gallery { grid-template-columns: 1fr; gap: 30px; padding: 14px 8px 26px; }
-  .quest-memory { max-width: 520px; width: 100%; margin-inline: auto; }
+  .quest-scrapbook { margin: -12px; }
+  .quest-reel-heading { padding: 24px 18px 18px; display: block; }
+  .quest-reel-heading h2 { font-size: 28px; }
+  .quest-reel-heading p { margin-top: 13px; }
+  .quest-reel-canvas { min-height: 320px; padding: 48px 15px 48px; }
+  .quest-gallery, .gallery-two .quest-gallery, .gallery-few .quest-gallery { max-width: 560px; margin-inline: auto; columns: 1; }
+  .quest-memory, .gallery-one .quest-memory { width: 94%; max-width: 520px; margin: 0 3% 43px; }
+  .quest-memory.memory-size-1 { width: 87%; margin-left: 10%; }.quest-memory.memory-size-2 { width: 93%; margin-left: 2%; }.quest-memory.memory-size-3 { width: 89%; margin-left: 3%; }.quest-memory.memory-size-4 { width: 96%; margin-left: 1%; }
+  .gallery-two .quest-memory:nth-child(2) { margin-top: 8px; }
+  .quest-memory-caption { padding: 48px 12px 12px; }
+  .quest-memory-caption h3 { font-size: 21px; }
   .quest-proof-card { padding: 22px 18px; }
   .quest-photo-empty { min-height: 190px; }
   .quest-lightbox { padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)); place-items: stretch; }
@@ -582,9 +616,12 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .quest-lightbox-close { right: 12px; top: 12px; width: 40px; height: 40px; }
   .quest-lightbox-photo { padding: 62px 10px 12px; }
   .quest-lightbox-photo img { max-height: 100%; border-radius: 5px; }
+  .quest-lightbox-side-nav { left: 8px; right: 8px; }
+  .quest-lightbox-side-nav button { width: 42px; height: 42px; }
   .quest-lightbox-details { padding: 18px 16px 17px; display: grid; gap: 16px; background: var(--paper); color: var(--ink); }
   .quest-lightbox-copy h2 { color: var(--ink); font-size: 23px; }
   .quest-lightbox-copy time { opacity: .52; }
+  .quest-lightbox-position { position: absolute; left: 50%; top: 23px; color: white; transform: translateX(-50%); opacity: .7; }
   .quest-lightbox-actions { min-width: 0; width: 100%; }
   .quest-lightbox-actions button { min-height: 51px; font-size: 9px; }
   .quest-lightbox-actions span.error { color: #963a2b; }
