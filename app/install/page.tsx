@@ -16,6 +16,7 @@ const guides = [
     device: "iPhone",
     browser: "Safari",
     label: "Recommended",
+    supportUrl: null,
     steps: [
       "Open the Fog & Fire link in Safari.",
       "Tap the Share button — the square with an arrow pointing up.",
@@ -27,6 +28,7 @@ const guides = [
     device: "iPhone",
     browser: "Chrome",
     label: "Also works",
+    supportUrl: "https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DiOS&oco=1",
     steps: [
       "Open the Fog & Fire link in Chrome.",
       "Tap the Share button beside the address bar.",
@@ -38,6 +40,7 @@ const guides = [
     device: "Android",
     browser: "Chrome",
     label: "Recommended",
+    supportUrl: "https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&oco=1",
     steps: [
       "Open the Fog & Fire link in Chrome.",
       "Tap the three-dot menu beside the address bar.",
@@ -77,6 +80,16 @@ export default function InstallGuidePage() {
             <ol>
               {guide.steps.map((step) => <li key={step}>{step}</li>)}
             </ol>
+            {guide.supportUrl ? (
+              <a
+                className="install-support-link"
+                href={guide.supportUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Google Chrome’s official guide <span aria-hidden="true">↗</span>
+              </a>
+            ) : null}
           </article>
         ))}
       </section>

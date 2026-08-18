@@ -37,3 +37,13 @@ test("serves the installable app manifest", async () => {
   assert.equal(manifest.display, "standalone");
   assert.deepEqual(manifest.icons.map((icon) => icon.sizes), ["192x192", "512x512"]);
 });
+
+test("renders official Chrome install help for iPhone and Android", async () => {
+  const response = await render("/install");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Google Chrome’s official guide/);
+  assert.match(html, /GENIE\.Platform%3DiOS/);
+  assert.match(html, /GENIE\.Platform%3DAndroid/);
+});

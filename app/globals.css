@@ -328,6 +328,10 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .install-option li::before { content: counter(install-step, decimal-leading-zero); position: absolute; top: 1px; left: 0; color: var(--coral); font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .08em; }
 .install-option li + li { padding-top: 20px; border-top: 1px solid var(--line); }
 .install-option li + li::before { top: 21px; }
+.install-support-link { min-height: 44px; margin-top: 10px; padding: 12px 0 7px; border-top: 1px solid var(--line); color: var(--lake); display: flex; align-items: center; justify-content: space-between; gap: 18px; font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .09em; line-height: 1.45; text-decoration: none; text-transform: uppercase; }
+.install-support-link:hover { color: var(--coral); }
+.install-support-link span { font-family: var(--font-geist); font-size: 15px; transition: transform .2s ease; }
+.install-support-link:hover span { transform: translate(2px, -2px); }
 .install-finish { margin-top: 28px; padding: 24px 28px; display: flex; align-items: center; gap: 16px; background: var(--dark-panel); color: white; }
 .install-finish > span { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--lake); }
 .install-finish p { margin: 0; font-size: 13px; line-height: 1.5; opacity: .76; }
@@ -375,10 +379,16 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   body { padding-bottom: 72px; }
   .section-shell { width: calc(100% - 36px); }
   .site-header { height: 68px; padding: 0 18px; }
-  .brand small, .avatar-stack, .site-header nav { display: none; }
+  .brand small, .site-header nav { display: none; }
   .brand b { font-size: 13px; }
   .brand-mark { width: 36px; height: 36px; }
-  .mobile-nav { position: fixed; z-index: 50; display: grid; grid-template-columns: repeat(4, 1fr); bottom: 0; left: 0; right: 0; height: 68px; background: rgba(28,37,34,.96); backdrop-filter: blur(12px); padding-bottom: env(safe-area-inset-bottom); }
+  .header-actions { gap: 8px; }
+  .theme-toggle { min-width: 38px; width: 38px; padding: 0; }
+  .theme-toggle b { display: none; }
+  .avatar-stack { display: flex; }
+  .avatar-stack span { width: 26px; height: 26px; font-size: 7px; }
+  .avatar-stack b { margin-left: 5px; font-size: 8px; white-space: nowrap; }
+  .mobile-nav { position: fixed; z-index: 50; display: grid; grid-template-columns: repeat(3, 1fr); bottom: 0; left: 0; right: 0; height: 68px; background: rgba(28,37,34,.96); backdrop-filter: blur(12px); padding-bottom: env(safe-area-inset-bottom); }
   .mobile-nav button { border: 0; background: transparent; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-family: var(--font-mono); text-transform: uppercase; font-size: 7px; letter-spacing: .1em; opacity: .48; }
   .mobile-nav button span { font-family: var(--font-geist); font-size: 18px; line-height: 1; }
   .mobile-nav button.active { opacity: 1; color: #f6b6a7; }

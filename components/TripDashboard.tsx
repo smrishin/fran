@@ -22,6 +22,8 @@ const navItems: { id: Section; label: string; short: string }[] = [
   { id: "guests", label: "Guests", short: "Crew" },
 ];
 
+const mobileNavItems = navItems.filter((item) => item.id !== "guests");
+
 function Logo() {
   return (
     <span className="brand-mark" aria-hidden="true">
@@ -313,9 +315,9 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: Navi
         </div>
       </header>
       <nav className="mobile-nav" aria-label="Mobile navigation">
-        {navItems.map((item, index) => (
+        {mobileNavItems.map((item, index) => (
           <button key={item.id} className={section === item.id ? "active" : ""} onClick={() => onNavigate(item.id)}>
-            <span>{index === 0 ? "⌂" : index === 1 ? "≡" : index === 2 ? "□" : "••"}</span>{item.short}
+            <span>{index === 0 ? "⌂" : index === 1 ? "≡" : "□"}</span>{item.short}
           </button>
         ))}
       </nav>
