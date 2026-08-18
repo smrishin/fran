@@ -226,10 +226,7 @@ function daysBetween(start: string, end: string) {
 
 function TripDateCards() {
   const today = useCaliforniaDate();
-  const firstDay = itinerary[0];
-  const lastDay = itinerary[itinerary.length - 1];
   const currentDay = itinerary.find((day) => day.date === today);
-  const nextDay = itinerary.find((day) => !today || day.date > today);
 
   let countdownLabel = "COUNTDOWN";
   let countdownValue = "—";
@@ -246,14 +243,8 @@ function TripDateCards() {
     countdownNote = "Week well spent";
   }
 
-  const featuredDay = currentDay ?? nextDay ?? lastDay;
-  const featuredLabel = currentDay ? "TODAY" : nextDay ? "NEXT DAY" : "LAST DAY";
-
   return (
-    <>
-      <div><small>{countdownLabel}</small><strong>{countdownValue}</strong><p>{countdownNote}</p></div>
-      <div><small>{featuredLabel}</small><strong>{featuredDay?.destination ?? firstDay.destination}</strong><p>{formatTripDate(featuredDay?.date ?? firstDay.date)}</p></div>
-    </>
+    <div><small>{countdownLabel}</small><strong>{countdownValue}</strong><p>{countdownNote}</p></div>
   );
 }
 
@@ -310,7 +301,7 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: Navi
         <div className="header-actions">
           <ThemeToggle />
           <button className="avatar-stack" onClick={() => onNavigate("guests")} aria-label="View travelers">
-            <span>{guests[0].initials}</span><span>{guests[1].initials}</span><b>7 travelers</b>
+            {guests.map((guest) => <span key={guest.id}>{guest.initials}</span>)}
           </button>
         </div>
       </header>
@@ -334,11 +325,6 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
         <div className="hero-copy">
           <p className="eyebrow">OCT 24 — NOV 01 · CALIFORNIA ’26</p>
           <h1>City lights.<br/><em>Wild nights.</em></h1>
-          <p className="intro">Big Sur to Tahoe, through the Bay, and everywhere worth remembering in between.</p>
-          <div className="hero-actions">
-            <button className="primary-button" onClick={() => onNavigate("itinerary")}>Explore the week <span>→</span></button>
-            <span className="confirmed-tag"><i /> Dates locked</span>
-          </div>
         </div>
 
         <div className="route-card" aria-label="Trip route concept">
@@ -356,8 +342,6 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
 
       <section className="quick-strip" aria-label="Trip overview">
         <TripDateCards />
-        <div><small>TRIP LENGTH</small><strong>9 days</strong><p>October 24 — November 1</p></div>
-        <div><small>THE CREW</small><strong>7 travelers</strong><p>Two hosts · Five guests</p></div>
       </section>
 
       <section className="home-grid section-shell">
