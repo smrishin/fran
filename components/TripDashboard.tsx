@@ -652,6 +652,20 @@ export function TripDashboard() {
       .catch(() => setCalendar({ configured: false, events: [], message: "Calendar unavailable." }));
   }, []);
 
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
+
+    let cancelled = false;
+    navigator.serviceWorker.register("/sw.js")
+      .then(() => navigator.serviceWorker.ready)
+      .then((registration) => {
+        if (!cancelled) registration.active?.postMessage({ type: "CACHE_APP" });
+      })
+      .catch(() => undefined);
+
+    return () => { cancelled = true; };
+  }, []);
+
   const navigate: Navigate = (next, itineraryIndex, activityId) => {
     if (next === "itinerary") {
       setSelectedItineraryIndex(itineraryIndex ?? suggestedItineraryIndex());
@@ -665,7 +679,7 @@ export function TripDashboard() {
   };
 
   return (
-    <main>
+    <main data-fog-fire-dashboard="true">
       <AppHeader section={section} onNavigate={navigate} />
       {section === "home" && <HomeView onNavigate={navigate} calendar={calendar} />}
       {section === "itinerary" && <ItineraryView calendar={calendar} selectedIndex={selectedItineraryIndex} selectedActivityId={selectedActivityId} onSelect={(index) => { setSelectedItineraryIndex(index); setSelectedActivityId(null); }} />}

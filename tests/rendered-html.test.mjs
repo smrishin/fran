@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { itinerary, trip } from "../data/trip.ts";
 
@@ -56,4 +57,13 @@ test("renders official Chrome install help for iPhone and Android", async () => 
   assert.match(html, /Google Chrome’s official guide/);
   assert.match(html, /GENIE\.Platform%3DiOS/);
   assert.match(html, /GENIE\.Platform%3DAndroid/);
+});
+
+test("keeps the unlocked dashboard and last calendar available offline", async () => {
+  const worker = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
+
+  assert.match(worker, /CACHE_APP/);
+  assert.match(worker, /data-fog-fire-dashboard/);
+  assert.match(worker, /\/api\/calendar/);
+  assert.match(worker, /request\.mode === "navigate"/);
 });
