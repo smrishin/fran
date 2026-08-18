@@ -85,7 +85,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 .hero::before { content: ""; width: 340px; height: 340px; border: 1px solid rgba(240,100,73,.2); border-radius: 50%; position: absolute; top: -190px; left: 36%; }
 .hero-countdown { width: max-content; max-width: 100%; margin: 0 0 28px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .hero-countdown small { color: var(--coral); font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .16em; text-shadow: 0 0 10px color-mix(in srgb, var(--coral) 72%, transparent); text-transform: uppercase; }
-.hero-countdown strong { color: var(--coral); font-size: 22px; letter-spacing: -.02em; text-shadow: 0 0 7px color-mix(in srgb, var(--coral) 92%, transparent), 0 0 18px color-mix(in srgb, var(--coral) 72%, transparent), 0 0 36px color-mix(in srgb, var(--coral) 48%, transparent); }
+.hero-countdown strong { font-size: 20px; letter-spacing: -.02em; text-shadow: 0 0 10px color-mix(in srgb, var(--coral) 70%, transparent), 0 0 30px color-mix(in srgb, var(--coral) 42%, transparent), 0 0 52px color-mix(in srgb, var(--coral) 22%, transparent); }
 .hero-countdown p { margin: 0; font-family: var(--font-mono); font-size: 8px; letter-spacing: .04em; opacity: .48; }
 .eyebrow { font-family: var(--font-mono), monospace; font-weight: 650; letter-spacing: .2em; font-size: 10px; color: var(--coral); margin: 0 0 20px; }
 .eyebrow.light { color: #f3b9a9; }
