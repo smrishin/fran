@@ -244,7 +244,11 @@ function TripDateCards() {
   }
 
   return (
-    <div><small>{countdownLabel}</small><strong>{countdownValue}</strong><p>{countdownNote}</p></div>
+    <div className="hero-countdown">
+      <small>{countdownLabel}</small>
+      <strong>{countdownValue}</strong>
+      <p>{countdownNote}</p>
+    </div>
   );
 }
 
@@ -324,6 +328,7 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
       <section className="hero page-enter">
         <div className="hero-copy">
           <p className="eyebrow">OCT 24 — NOV 01 · CALIFORNIA ’26</p>
+          <TripDateCards />
           <h1>City lights.<br/><em>Wild nights.</em></h1>
         </div>
 
@@ -338,10 +343,6 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
           </div>
           <div className="route-card-bottom"><span>↓ PACIFIC COAST</span><span>OCT 24 — NOV 01</span></div>
         </div>
-      </section>
-
-      <section className="quick-strip" aria-label="Trip overview">
-        <TripDateCards />
       </section>
 
       <section className="home-grid section-shell">

@@ -83,6 +83,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 
 .hero { min-height: 540px; padding: 72px clamp(22px, 7vw, 110px) 56px; display: grid; grid-template-columns: 1fr minmax(400px, .88fr); gap: clamp(48px, 8vw, 130px); align-items: center; position: relative; overflow: hidden; }
 .hero::before { content: ""; width: 340px; height: 340px; border: 1px solid rgba(240,100,73,.2); border-radius: 50%; position: absolute; top: -190px; left: 36%; }
+.hero-countdown { width: max-content; max-width: 100%; margin: 0 0 28px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.hero-countdown small { color: var(--coral); font-family: var(--font-mono); font-size: 8px; font-weight: 700; letter-spacing: .16em; text-shadow: 0 0 10px color-mix(in srgb, var(--coral) 72%, transparent); text-transform: uppercase; }
+.hero-countdown strong { color: var(--coral); font-size: 22px; letter-spacing: -.02em; text-shadow: 0 0 7px color-mix(in srgb, var(--coral) 92%, transparent), 0 0 18px color-mix(in srgb, var(--coral) 72%, transparent), 0 0 36px color-mix(in srgb, var(--coral) 48%, transparent); }
+.hero-countdown p { margin: 0; font-family: var(--font-mono); font-size: 8px; letter-spacing: .04em; opacity: .48; }
 .eyebrow { font-family: var(--font-mono), monospace; font-weight: 650; letter-spacing: .2em; font-size: 10px; color: var(--coral); margin: 0 0 20px; }
 .eyebrow.light { color: #f3b9a9; }
 h1, h2 { letter-spacing: -.055em; margin: 0; line-height: .94; font-weight: 750; }
@@ -114,12 +118,7 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .route-stop b { background: rgba(244,240,230,.9); padding: 3px 5px; }
 .stop-1 { left: 30px; top: 45px; }.stop-2 { left: 150px; top: 104px; }.stop-3 { left: 72px; bottom: 92px; }.stop-4 { right: 25px; bottom: 42px; }.stop-5 { right: 28px; top: 150px; }
 
-.quick-strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr; margin: 0 clamp(22px, 5vw, 76px); }
-.quick-strip > div { padding: 27px clamp(15px, 2.4vw, 34px); border-right: 1px solid var(--line); }
-.quick-strip > div:last-child { border-right: 0; }
-.quick-strip small, .card-kicker { font-family: var(--font-mono); font-size: 9px; letter-spacing: .15em; opacity: .5; display: block; margin-bottom: 7px; }
-.quick-strip strong { font-size: 19px; }
-.quick-strip p { margin: 4px 0 0; font-size: 11px; opacity: .55; }
+.card-kicker { font-family: var(--font-mono); font-size: 9px; letter-spacing: .15em; opacity: .5; display: block; margin-bottom: 7px; }
 
 .home-grid { padding-block: 92px 120px; display: grid; grid-template-columns: 1.7fr .82fr; gap: 18px; }
 .panel-paper, .panel-dark, .panel-lake { border-radius: 8px; }
@@ -372,7 +371,6 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 
 @media (max-width: 1050px) {
   .hero { gap: 50px; grid-template-columns: 1fr minmax(360px, .8fr); }
-  .quick-strip { grid-template-columns: 1fr; }
   .guest-grid { grid-template-columns: repeat(2, 1fr); }
   .activity-card { grid-template-columns: 96px minmax(0, 1fr) minmax(170px, 220px); grid-template-areas: "time copy location" ". cost actions"; }
   .activity-location { justify-self: start; justify-content: flex-start; text-align: left; }
@@ -401,7 +399,6 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .intro { font-size: 16px; }
   .route-card { padding: 13px; }
   .route-map { height: 320px; }
-  .quick-strip { margin: 0 18px; }
   .home-grid { grid-template-columns: 1fr; padding-block: 70px 80px; }
   .week-peek { grid-row: auto; padding: 28px 22px; }
   .panel-heading { display: block; }
@@ -473,9 +470,6 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .hero-actions .placeholder-tag { align-self: flex-start; }
   .route-map { height: 285px; }
   .stop-2 { left: 125px; }
-  .quick-strip { grid-template-columns: 1fr; }
-  .quick-strip > div { border-right: 0; border-bottom: 1px solid var(--line); }
-  .quick-strip > div:last-child { border-bottom: 0; }
   .mini-days { grid-template-columns: repeat(2, 1fr); }
   .page-title-row h1 { font-size: 56px; }
   .calendar-title .sync-status { width: max-content; }
