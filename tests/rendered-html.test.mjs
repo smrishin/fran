@@ -95,6 +95,8 @@ test("Quest modals dismiss cleanly and memories can be saved", async () => {
   assert.match(questView, /aria-label="Close memory"/);
   assert.match(questView, /navigator\.share/);
   assert.match(questView, /link\.download = file\.name/);
+  assert.match(questView, /quest-lightbox-backdrop/);
+  assert.match(questView, /quest-lightbox-details-toggle/);
   assert.match(questView, /Save photo/);
 });
 

@@ -171,6 +171,7 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
 }) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
+  const [detailsOpen, setDetailsOpen] = useState(true);
   const touchStart = useRef<number | null>(null);
   const taskTitle = questTasks.find((task) => task.id === completion.taskId)?.title ?? "Quest memory";
 
@@ -244,7 +245,8 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
   };
 
   return createPortal(
-    <div className="quest-lightbox" role="dialog" aria-modal="true" aria-labelledby="quest-memory-title">
+    <div className="quest-lightbox" role="dialog" aria-modal="true" aria-label={`Quest memory: ${taskTitle} by ${completion.playerName}`}>
+      <div className="quest-lightbox-backdrop" aria-hidden="true"><img src={completion.photoUrl} alt="" /></div>
       <button className="quest-lightbox-dismiss" type="button" aria-label="Close memory" onClick={onClose} />
       <article className="quest-lightbox-frame">
         <button className="quest-lightbox-close" type="button" aria-label="Close photo" onClick={onClose}>×</button>
@@ -255,20 +257,26 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
             <button type="button" aria-label="Previous memory" onClick={onPrevious}>←</button>
             <button type="button" aria-label="Next memory" onClick={onNext}>→</button>
           </div>}
+          {total > 1 && <span className="quest-lightbox-swipe-hint" aria-hidden="true">← swipe to browse →</span>}
         </div>
-        <footer className="quest-lightbox-details">
-          <div className="quest-lightbox-copy">
-            <small>QUEST MEMORY · {completion.playerName}</small>
-            <h2 id="quest-memory-title">{taskTitle}</h2>
-            <time dateTime={completion.completedAt}>{formatMemoryDate(completion.completedAt)}</time>
-          </div>
-          <div className="quest-lightbox-position" aria-live="polite"><span>{String(position).padStart(2, "0")}</span><i>/</i>{String(total).padStart(2, "0")}</div>
-          <div className="quest-lightbox-actions">
-            <button type="button" onClick={savePhoto} disabled={saveStatus === "saving"}>
-              {saveStatus === "saving" ? "Preparing photo…" : "Save photo ↓"}
-            </button>
-            {saveStatus === "idle" && <small>On iPhone, choose “Save Image” in the share sheet.</small>}
-            {saveMessage && <span className={saveStatus} role={saveStatus === "error" ? "alert" : "status"}>{saveMessage}</span>}
+        <footer className={`quest-lightbox-details ${detailsOpen ? "expanded" : "collapsed"}`}>
+          <button className="quest-lightbox-details-toggle" type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
+            <span aria-hidden="true" /><b>Memory details</b><i aria-hidden="true">{detailsOpen ? "−" : "+"}</i>
+          </button>
+          <div className="quest-lightbox-details-content">
+            <div className="quest-lightbox-copy">
+              <small>QUEST MEMORY · {completion.playerName}</small>
+              <h2 id="quest-memory-title">{taskTitle}</h2>
+              <time dateTime={completion.completedAt}>{formatMemoryDate(completion.completedAt)}</time>
+            </div>
+            <div className="quest-lightbox-position" aria-live="polite"><span>{String(position).padStart(2, "0")}</span><i>/</i>{String(total).padStart(2, "0")}</div>
+            <div className="quest-lightbox-actions">
+              <button type="button" onClick={savePhoto} disabled={saveStatus === "saving"}>
+                {saveStatus === "saving" ? "Preparing photo…" : "Save photo ↓"}
+              </button>
+              {saveStatus === "idle" && <small>On iPhone, choose “Save Image” in the share sheet.</small>}
+              {saveMessage && <span className={saveStatus} role={saveStatus === "error" ? "alert" : "status"}>{saveMessage}</span>}
+            </div>
           </div>
         </footer>
       </article>
