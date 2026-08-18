@@ -13,6 +13,7 @@ export type Activity = {
   location?: string;
   website?: string;
   phone?: string;
+  flights?: string[];
   cost: Cost;
   notes?: string;
   placeholder?: boolean;
@@ -53,7 +54,7 @@ export type Guest = {
 export const trip = {
   workingName: "Fog & Fire",
   tagline: "California · ’26 · One wild week",
-  dates: { start: "2026-10-24", end: "2026-11-01" },
+  dates: { start: "2026-10-23", end: "2026-11-01" },
   locations: ["Big Sur", "Santa Cruz", "Lake Tahoe", "San Francisco", "Sunnyvale"],
   calendar: {
     source: "iCloud public calendar",
@@ -76,6 +77,24 @@ const openPlan = (id: string, title: string, location: string): Activity => ({
 });
 
 export const itinerary: ItineraryDay[] = [
+  {
+    day: 0,
+    date: "2026-10-23",
+    destination: "Touchdown",
+    tone: "lake",
+    activities: [
+      {
+        id: "d0-a1",
+        title: "Airport arrivals & first pickups",
+        startTime: "9:05 PM",
+        duration: "Pickup timing TBD",
+        location: "San Francisco International Airport (SFO)",
+        flights: ["WN3074"],
+        cost: { kind: "tbd" },
+        notes: "Sourav lands on Southwest WN 3074. Rishi’s arrival details are still pending.",
+      },
+    ],
+  },
   { day: 1, date: "2026-10-24", destination: "Assemble", tone: "coral", activities: [openPlan("d1-a1", "The crew assembles", "San Francisco area · TBD")] },
   { day: 2, date: "2026-10-25", destination: "Big Sur", tone: "sun", activities: [openPlan("d2-a1", "Big Sur day", "Big Sur")] },
   { day: 3, date: "2026-10-26", destination: "Santa Cruz", tone: "coral", activities: [openPlan("d3-a1", "Santa Cruz day", "Santa Cruz")] },

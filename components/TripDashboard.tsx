@@ -7,7 +7,7 @@ import { parseItineraryNotes } from "../lib/itinerary";
 import { ThemeToggle } from "./ThemeToggle";
 
 type Section = "home" | "itinerary" | "calendar" | "guests";
-type Navigate = (section: Section, itineraryIndex?: number) => void;
+type Navigate = (section: Section, itineraryIndex?: number, activityId?: string) => void;
 type CalendarPayload = {
   configured: boolean;
   events: CalendarEvent[];
@@ -50,6 +50,36 @@ function googleMapsUrl(location: string) {
 
 function telephoneUrl(phone: string) {
   return `tel:${phone.replace(/[^\d+*#,;]/g, "")}`;
+}
+
+const flightAwareAirlines: Record<string, string> = {
+  AA: "AAL",
+  AS: "ASA",
+  B6: "JBU",
+  DL: "DAL",
+  F9: "FFT",
+  NK: "NKS",
+  UA: "UAL",
+  WN: "SWA",
+};
+
+function flightTrackingUrl(flight: string) {
+  const normalized = flight.toUpperCase().replace(/\s+/g, "");
+  const match = normalized.match(/^([A-Z0-9]{2})(\d{1,4}[A-Z]?)$/);
+  if (!match) return `https://www.flightaware.com/live/`;
+  const [, airline, number] = match;
+  return `https://www.flightaware.com/live/flight/${flightAwareAirlines[airline] ?? airline}${number}`;
+}
+
+function FlightTrackingLinks({ flights, className = "" }: { flights?: string[]; className?: string }) {
+  if (!flights?.length) return null;
+  return (
+    <div className={`flight-tracking-links ${className}`.trim()}>
+      {flights.map((flight) => (
+        <a href={flightTrackingUrl(flight)} key={flight} target="_blank" rel="noreferrer">Track {flight} <span>↗</span></a>
+      ))}
+    </div>
+  );
 }
 
 function isIOSDevice() {
@@ -102,9 +132,9 @@ function MapLink({ location, className, children }: { location: string; classNam
   );
 }
 
-function ActivityCard({ activity }: { activity: Activity }) {
+function ActivityCard({ activity, selected = false }: { activity: Activity; selected?: boolean }) {
   return (
-    <div className="activity-card">
+    <div className={`activity-card ${selected ? "selected-activity" : ""}`} id={`activity-${activity.id}`}>
       <div className="activity-time"><span>{activity.startTime ?? "TBD"}</span><small>{activity.duration ?? "Duration TBD"}</small></div>
       <div className="activity-copy">
         <h3>{activity.title}</h3>
@@ -113,11 +143,12 @@ function ActivityCard({ activity }: { activity: Activity }) {
       <div className="activity-actions">
         {activity.website && <a href={activity.website} target="_blank" rel="noreferrer">Visit website <span>↗</span></a>}
         {activity.phone && <a href={telephoneUrl(activity.phone)}>Call {activity.phone} <span>↗</span></a>}
+        <FlightTrackingLinks flights={activity.flights} />
       </div>
       {activity.location
         ? <MapLink location={activity.location} className="activity-location">⌖ {activity.location} <span>↗</span></MapLink>
         : <span className="activity-location activity-location-empty">Location TBD</span>}
-      <div className={`cost-chip ${activity.cost.kind}`}>{costLabel(activity.cost)}</div>
+      {activity.cost.kind !== "tbd" && <div className={`cost-chip ${activity.cost.kind}`}>{costLabel(activity.cost)}</div>}
     </div>
   );
 }
@@ -161,6 +192,7 @@ function eventToActivity(event: CalendarEvent): Activity {
     location: event.location,
     website: event.url && /^https?:\/\//i.test(event.url) ? event.url : undefined,
     phone: details.phone,
+    flights: details.flights,
     cost: details.cost,
     notes: details.notes,
   };
@@ -232,9 +264,14 @@ function TripDateCards() {
   let countdownValue = "—";
   let countdownNote = "Until assemble day";
   if (today && today < trip.dates.start) countdownValue = `${daysBetween(today, trip.dates.start)} days`;
+  if (today === trip.dates.start && !currentDay) {
+    countdownLabel = "TRIP DAY";
+    countdownValue = "Arrival day";
+    countdownNote = "The adventure begins";
+  }
   if (currentDay) {
     countdownLabel = "TRIP DAY";
-    countdownValue = `Day ${currentDay.day} of ${itinerary.length}`;
+    countdownValue = currentDay.day === 0 ? "Arrival day" : `Day ${currentDay.day} of ${Math.max(...itinerary.map((day) => day.day))}`;
     countdownNote = `${currentDay.destination} · today`;
   }
   if (today && today > trip.dates.end) {
@@ -278,13 +315,16 @@ function NextPlannedCard({ calendar }: { calendar: CalendarPayload | null }) {
 
   return (
     <div className="next-card panel-paper">
-      <div className="card-kicker"><span className="pulse" /> {label}</div>
+      <div className="card-kicker"><span className="pulse" /><span>{label}</span><b>{featuredDay.destination}</b></div>
       <div className="big-number">{String(featuredDay.day).padStart(2, "0")}</div>
-      <h3>{featuredDay.destination}</h3>
+      <h3>{activity.title}</h3>
       <p>{formatTripDate(featuredDay.date)}</p>
       <hr />
-      <dl><div><dt>TIME</dt><dd>{activity.startTime ?? "TBD"}</dd></div><div><dt>PLAN</dt><dd>{activity.title}</dd></div></dl>
-      <span className="confirmed-tag"><i /> {nextEvent ? "Live from iCloud" : "Date confirmed"}</span>
+      <dl><div><dt>DEPARTS</dt><dd>{activity.startTime ?? "TBD"}</dd></div><div><dt>DURATION</dt><dd>{activity.duration ?? "TBD"}</dd></div></dl>
+      <FlightTrackingLinks flights={activity.flights} className="next-flight-links" />
+      {activity.location
+        ? <MapLink location={activity.location} className="next-location">⌖ {activity.location} <span>↗</span></MapLink>
+        : null}
     </div>
   );
 }
@@ -327,7 +367,7 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
     <>
       <section className="hero page-enter">
         <div className="hero-copy">
-          <p className="eyebrow">OCT 24 — NOV 01 · CALIFORNIA ’26</p>
+          <p className="eyebrow">OCT 23 — NOV 01 · CALIFORNIA ’26</p>
           <TripDateCards />
           <h1>City lights.<br/><em>Wild nights.</em></h1>
         </div>
@@ -341,7 +381,7 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
               <div className={`route-stop stop-${index + 1}`} key={stop}><span>{index + 1}</span><b>{stop}</b></div>
             ))}
           </div>
-          <div className="route-card-bottom"><span>↓ PACIFIC COAST</span><span>OCT 24 — NOV 01</span></div>
+          <div className="route-card-bottom"><span>↓ PACIFIC COAST</span><span>OCT 23 — NOV 01</span></div>
         </div>
       </section>
 
@@ -381,7 +421,7 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
   );
 }
 
-function ItineraryView({ calendar, selectedIndex, onSelect }: { calendar: CalendarPayload | null; selectedIndex: number; onSelect: (index: number) => void }) {
+function ItineraryView({ calendar, selectedIndex, selectedActivityId, onSelect }: { calendar: CalendarPayload | null; selectedIndex: number; selectedActivityId: string | null; onSelect: (index: number) => void }) {
   const today = useCaliforniaDate();
   const menuStartIndex = today ? suggestedItineraryIndex(today) : 0;
   const orderedDays = itinerary.map((_, offset) => {
@@ -397,6 +437,14 @@ function ItineraryView({ calendar, selectedIndex, onSelect }: { calendar: Calend
   );
   const activities = liveActivities.length ? liveActivities : selectedDay.activities;
   const isLive = liveActivities.length > 0;
+
+  useEffect(() => {
+    if (!selectedActivityId) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(`activity-${selectedActivityId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [selectedActivityId, selectedDay.date, activities.length]);
 
   return (
     <div className="inner-page page-enter">
@@ -430,7 +478,7 @@ function ItineraryView({ calendar, selectedIndex, onSelect }: { calendar: Calend
             <span className="day-status">{isLive ? `${liveActivities.length} LIVE ${liveActivities.length === 1 ? "ACTIVITY" : "ACTIVITIES"}` : calendar === null ? "SYNCING" : "PLAN OPEN"}</span>
           </header>
           <div className="activity-list">
-            {activities.map((activity) => <ActivityCard activity={activity} key={activity.id} />)}
+            {activities.map((activity) => <ActivityCard activity={activity} selected={activity.id === selectedActivityId} key={activity.id} />)}
           </div>
         </article>
       </section>
@@ -438,7 +486,7 @@ function ItineraryView({ calendar, selectedIndex, onSelect }: { calendar: Calend
   );
 }
 
-function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
+function CalendarView({ calendar, onNavigate }: { calendar: CalendarPayload | null; onNavigate: Navigate }) {
   const eventsByDay = useMemo(() => {
     const groups = new Map<string, CalendarEvent[]>();
     for (const event of calendar?.events ?? []) {
@@ -470,12 +518,22 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
                     <div className="event-date"><small>{label.weekday}</small><strong>{label.day}</strong></div>
                     <div className="event-stack">
                       <h3>{label.full}</h3>
-                      {events.map((event) => (
-                        <article className="calendar-event" key={event.id}>
-                          <div className="event-time">{formatEventTime(event.start, event.allDay)}{event.end && !event.allDay ? <small>— {formatEventTime(event.end, false)}</small> : null}</div>
-                          <div><h4>{event.title}</h4>{event.location && <MapLink location={event.location} className="calendar-location">⌖ {event.location} ↗</MapLink>}</div>
-                        </article>
-                      ))}
+                      {events.map((event) => {
+                        const itineraryIndex = itinerary.findIndex((day) => day.date === event.start.slice(0, 10));
+                        return (
+                          <button
+                            aria-label={`View ${event.title} details in Plan`}
+                            className="calendar-event"
+                            disabled={itineraryIndex < 0}
+                            key={event.id}
+                            type="button"
+                            onClick={() => onNavigate("itinerary", itineraryIndex, event.id)}
+                          >
+                            <span className="event-time">{formatEventTime(event.start, event.allDay)}{event.end && !event.allDay ? <small>— {formatEventTime(event.end, false)}</small> : null}</span>
+                            <div className="calendar-event-copy"><h4>{event.title}</h4></div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -485,7 +543,7 @@ function CalendarView({ calendar }: { calendar: CalendarPayload | null }) {
             <div className="empty-agenda">
               <div className="empty-calendar-mark"><span>CAL</span><strong>—</strong></div>
               <h3>Calendar events will appear here</h3>
-              <p>Connect the shared iCloud calendar to display event dates, times, titles, and locations.</p>
+              <p>Connect the shared iCloud calendar to display event dates, times, and titles.</p>
               <div className="agenda-skeleton"><i/><i/><i/></div>
             </div>
           )}
@@ -578,6 +636,7 @@ export function TripDashboard() {
   const [section, setSection] = useState<Section>("home");
   const [calendar, setCalendar] = useState<CalendarPayload | null>(null);
   const [selectedItineraryIndex, setSelectedItineraryIndex] = useState(0);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
 
   useEffect(() => {
     const hash = window.location.hash.slice(1) as Section;
@@ -593,9 +652,12 @@ export function TripDashboard() {
       .catch(() => setCalendar({ configured: false, events: [], message: "Calendar unavailable." }));
   }, []);
 
-  const navigate: Navigate = (next, itineraryIndex) => {
+  const navigate: Navigate = (next, itineraryIndex, activityId) => {
     if (next === "itinerary") {
       setSelectedItineraryIndex(itineraryIndex ?? suggestedItineraryIndex());
+      setSelectedActivityId(activityId ?? null);
+    } else {
+      setSelectedActivityId(null);
     }
     setSection(next);
     window.history.replaceState(null, "", next === "home" ? window.location.pathname : `#${next}`);
@@ -606,8 +668,8 @@ export function TripDashboard() {
     <main>
       <AppHeader section={section} onNavigate={navigate} />
       {section === "home" && <HomeView onNavigate={navigate} calendar={calendar} />}
-      {section === "itinerary" && <ItineraryView calendar={calendar} selectedIndex={selectedItineraryIndex} onSelect={setSelectedItineraryIndex} />}
-      {section === "calendar" && <CalendarView calendar={calendar} />}
+      {section === "itinerary" && <ItineraryView calendar={calendar} selectedIndex={selectedItineraryIndex} selectedActivityId={selectedActivityId} onSelect={(index) => { setSelectedItineraryIndex(index); setSelectedActivityId(null); }} />}
+      {section === "calendar" && <CalendarView calendar={calendar} onNavigate={navigate} />}
       {section === "guests" && <GuestsView />}
       <footer className="site-footer">
         <div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div>

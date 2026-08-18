@@ -69,7 +69,7 @@ export function AccessGate() {
           <span className="access-install-arrow" aria-hidden="true">→</span>
         </a>
       </section>
-      <footer className="access-footer"><span>OCT 24 — NOV 01</span><span>CALIFORNIA · 2026</span></footer>
+      <footer className="access-footer"><span>OCT 23 — NOV 01</span><span>CALIFORNIA · 2026</span></footer>
     </main>
   );
 }

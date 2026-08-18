@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { itinerary, trip } from "../data/trip.ts";
 
 async function render(path = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -22,6 +23,7 @@ test("server-renders the locked Campfire Code gate", async () => {
   assert.match(html, /Fog &amp; Fire/);
   assert.match(html, /Campfire Code/);
   assert.match(html, /seven days/);
+  assert.match(html, /OCT 23 — NOV 01/);
   assert.match(html, /Add Fog &amp; Fire to your home screen/);
   assert.match(html, /href="\/install"/);
   assert.match(html, /favicon-32\.png/);
@@ -36,6 +38,14 @@ test("serves the installable app manifest", async () => {
   assert.equal(manifest.short_name, "Fog & Fire");
   assert.equal(manifest.display, "standalone");
   assert.deepEqual(manifest.icons.map((icon) => icon.sizes), ["192x192", "512x512"]);
+});
+
+test("starts the trip with a Day 0 arrivals plan", () => {
+  assert.equal(trip.dates.start, "2026-10-23");
+  assert.equal(itinerary[0].day, 0);
+  assert.equal(itinerary[0].date, trip.dates.start);
+  assert.equal(itinerary[0].destination, "Touchdown");
+  assert.match(itinerary[0].activities[0].title, /arrivals/i);
 });
 
 test("renders official Chrome install help for iPhone and Android", async () => {

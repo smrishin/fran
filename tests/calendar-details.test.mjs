@@ -36,3 +36,10 @@ test("extracts a case-insensitive phone line and keeps it out of notes", () => {
   assert.equal(details.phone, "+1 (831) 555-0123");
   assert.equal(details.notes, "Ask for the group table.");
 });
+
+test("extracts flight numbers and keeps them out of notes", () => {
+  const details = parseItineraryNotes("Meet at baggage claim.\nFlights WN1291 WN4367");
+
+  assert.deepEqual(details.flights, ["WN1291", "WN4367"]);
+  assert.equal(details.notes, "Meet at baggage claim.");
+});
