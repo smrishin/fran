@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { guests, itinerary, trip, type Activity, type Cost, type FlightLeg, type Guest } from "../data/trip";
 import type { CalendarEvent } from "../lib/ics";
 import { parseItineraryNotes } from "../lib/itinerary";
+import { HangoutView } from "./HangoutView";
 import { ThemeToggle } from "./ThemeToggle";
 import { QuestView } from "./QuestView";
 
-type Section = "home" | "itinerary" | "calendar" | "quest" | "guests";
+type Section = "home" | "itinerary" | "calendar" | "quest" | "hangout" | "guests";
 type Navigate = (section: Section, itineraryIndex?: number, activityId?: string) => void;
 type CalendarPayload = {
   configured: boolean;
@@ -21,10 +22,11 @@ const navItems: { id: Section; label: string; short: string; icon: string }[] = 
   { id: "itinerary", label: "Itinerary", short: "Plan", icon: "≡" },
   { id: "calendar", label: "Calendar", short: "Dates", icon: "□" },
   { id: "quest", label: "Quest", short: "Quest", icon: "✦" },
+  { id: "hangout", label: "Hangout", short: "Hangout", icon: "◎" },
   { id: "guests", label: "Guests", short: "Crew", icon: "●" },
 ];
 
-const mobileNavItems = navItems.filter((item) => item.id !== "guests");
+const mobileNavItems = navItems.filter((item) => item.id !== "guests" && item.id !== "calendar");
 
 function Logo() {
   return (
@@ -353,12 +355,24 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: Navi
       </header>
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {mobileNavItems.map((item) => (
-          <button key={item.id} className={section === item.id ? "active" : ""} onClick={() => onNavigate(item.id)}>
+          <button key={item.id} className={section === item.id || (item.id === "itinerary" && section === "calendar") ? "active" : ""} onClick={() => onNavigate(item.id)}>
             <span>{item.icon}</span>{item.short}
           </button>
         ))}
       </nav>
     </>
+  );
+}
+
+function MobilePlanTabs({ section, onNavigate }: { section: "itinerary" | "calendar"; onNavigate: Navigate }) {
+  return (
+    <nav className="mobile-plan-tabs" aria-label="Plan views">
+      <small>TRIP PLAN</small>
+      <div>
+        <button type="button" className={section === "itinerary" ? "active" : ""} onClick={() => onNavigate("itinerary")}>Itinerary</button>
+        <button type="button" className={section === "calendar" ? "active" : ""} onClick={() => onNavigate("calendar")}>Dates</button>
+      </div>
+    </nav>
   );
 }
 
@@ -683,10 +697,12 @@ export function TripDashboard() {
   return (
     <main data-fog-fire-dashboard="true">
       <AppHeader section={section} onNavigate={navigate} />
+      {(section === "itinerary" || section === "calendar") && <MobilePlanTabs section={section} onNavigate={navigate} />}
       {section === "home" && <HomeView onNavigate={navigate} calendar={calendar} />}
       {section === "itinerary" && <ItineraryView calendar={calendar} selectedIndex={selectedItineraryIndex} selectedActivityId={selectedActivityId} onSelect={(index) => { setSelectedItineraryIndex(index); setSelectedActivityId(null); }} />}
       {section === "calendar" && <CalendarView calendar={calendar} onNavigate={navigate} />}
       {section === "quest" && <QuestView />}
+      {section === "hangout" && <HangoutView />}
       {section === "guests" && <GuestsView />}
       <footer className="site-footer">
         <div><Logo/><span><b>{trip.workingName}</b><small>California · ’26</small></span></div>

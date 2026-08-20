@@ -8,6 +8,13 @@
       "when": 1787059841605,
       "tag": "0000_crazy_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787192407442,
+      "tag": "0001_dark_gideon",
+      "breakpoints": true
     }
   ]
 }

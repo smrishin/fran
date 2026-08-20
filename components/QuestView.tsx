@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent,
 import { createPortal } from "react-dom";
 import { questTasks, type QuestCompletion, type QuestTask } from "../data/quest";
 import { guests, type Guest } from "../data/trip";
+import { GuestIdentityPicker } from "./GuestIdentityPicker";
 
 const PLAYER_STORAGE_KEY = "fog-fire-quest-player";
 
@@ -40,28 +41,6 @@ function useModalDismiss(onClose: () => void) {
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [onClose]);
-}
-
-function PlayerPicker({ onChoose }: { onChoose: (guest: Guest) => void }) {
-  return (
-    <section className="quest-picker section-shell">
-      <div className="quest-picker-copy">
-        <p className="eyebrow">FIRST THINGS FIRST</p>
-        <h1>Who’s<br/><em>playing?</em></h1>
-        <p>Choose your name once. Quest will remember you on this device—no account or password needed.</p>
-      </div>
-      <div className="quest-player-grid" aria-label="Choose your player">
-        {guests.map((guest, index) => (
-          <button key={guest.id} type="button" onClick={() => onChoose(guest)}>
-            <span className={`guest-avatar avatar-${index + 1}`}>{guest.initials}</span>
-            <b>{guest.name}</b>
-            <small>{guest.homeBase}</small>
-            <i aria-hidden="true">→</i>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
 }
 
 function ProofComposer({ task, player, onClose, onSaved }: {
@@ -404,7 +383,7 @@ export function QuestView() {
   };
 
   if (!playerReady) return <div className="quest-loading section-shell">Preparing Quest…</div>;
-  if (!player) return <PlayerPicker onChoose={choosePlayer} />;
+  if (!player) return <GuestIdentityPicker eyebrow="FIRST THINGS FIRST" title="Who’s" accent="playing?" description="Choose your name once. Quest will remember you on this device—no account or password needed." ariaLabel="Choose your Quest player" onChoose={choosePlayer} />;
 
   return (
     <div className="quest-page inner-page page-enter">

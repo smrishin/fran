@@ -102,6 +102,7 @@ test("Quest modals dismiss cleanly and memories can be saved", async () => {
 
 test("Glow Reel progressively reveals memories and supports gallery navigation", async () => {
   const questView = await readFile(new URL("../components/QuestView.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
   assert.match(questView, /PAGE_SIZE = 10/);
   assert.match(questView, /IntersectionObserver/);
@@ -110,4 +111,56 @@ test("Glow Reel progressively reveals memories and supports gallery navigation",
   assert.match(questView, /Next memory/);
   assert.match(questView, /ArrowLeft/);
   assert.match(questView, /beginSwipe/);
+  assert.match(styles, /prefers-color-scheme: dark/);
+  assert.match(styles, /\.quest-scrapbook \{ background: #111814/);
+});
+
+test("mobile Plan groups itinerary and dates while Hangout reuses trip identities", async () => {
+  const dashboard = await readFile(new URL("../components/TripDashboard.tsx", import.meta.url), "utf8");
+  const hangout = await readFile(new URL("../components/HangoutView.tsx", import.meta.url), "utf8");
+  const quest = await readFile(new URL("../components/QuestView.tsx", import.meta.url), "utf8");
+  const games = await import("../data/hangout.ts");
+
+  assert.match(dashboard, /id: "hangout", label: "Hangout"/);
+  assert.match(dashboard, /item\.id !== "calendar"/);
+  assert.match(dashboard, /MobilePlanTabs/);
+  assert.match(dashboard, />Itinerary<\/button>/);
+  assert.match(dashboard, />Dates<\/button>/);
+  assert.match(hangout, /fog-fire-hangout-player/);
+  assert.match(hangout, /GuestIdentityPicker/);
+  assert.match(quest, /GuestIdentityPicker/);
+  assert.equal(games.hangoutGames.length, 1);
+  assert.equal(games.hangoutGames[0].id, "crossed-wires");
+});
+
+test("Crossed Wires keeps private prompts behind a player-only endpoint", async () => {
+  const lobbyResponse = await render("/api/hangout?playerId=rishi");
+  const questionResponse = await render("/api/hangout/question?playerId=rishi");
+  const client = await readFile(new URL("../components/CrossedWiresGame.tsx", import.meta.url), "utf8");
+  const storage = await readFile(new URL("../lib/hangout-storage.ts", import.meta.url), "utf8");
+  const questionRoute = await readFile(new URL("../app/api/hangout/question/route.ts", import.meta.url), "utf8");
+
+  assert.equal(lobbyResponse.status, 401);
+  assert.equal(questionResponse.status, 401);
+  assert.doesNotMatch(client, /crossed-wires-questions/);
+  assert.doesNotMatch(client, /you are (?:the )?imposter/i);
+  assert.doesNotMatch(client, /question\?playerId/);
+  assert.match(questionRoute, /HANGOUT_IDENTITY_COOKIE_NAME/);
+  assert.match(questionRoute, /verifyHangoutIdentityToken/);
+  assert.match(storage, /return \{ roundId: round\.id, question:/);
+  assert.match(storage, /round\.status === "revealed"/);
+});
+
+test("Crossed Wires supports a reusable lobby and host-controlled rounds", async () => {
+  const client = await readFile(new URL("../components/CrossedWiresGame.tsx", import.meta.url), "utf8");
+  const questions = await import("../lib/crossed-wires-questions.ts");
+
+  assert.ok(questions.crossedWiresQuestionPairs.length >= 3);
+  assert.ok(questions.crossedWiresQuestionPairs.every((pair) => pair.mainQuestion && pair.imposterQuestion));
+  assert.match(client, /create.*join.*leave.*start.*next.*reveal.*end/s);
+  assert.match(client, /Show my question/);
+  assert.match(client, /Hide my question/);
+  assert.match(client, /Reveal the questions\? Make sure everyone has made their guess first\./);
+  assert.match(client, /Next round/);
+  assert.match(client, /setInterval/);
 });
