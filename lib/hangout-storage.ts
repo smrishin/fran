@@ -4,6 +4,7 @@ import { guests, type Guest } from "../data/trip";
 import { crossedWiresQuestionPairs } from "./crossed-wires-questions";
 
 const GAME_TYPE = "crossed-wires";
+const STALE_LOBBY_AFTER_MS = 3 * 60 * 60 * 1000;
 
 type HangoutEnv = { DB: D1Database };
 type LobbyStatus = "waiting" | "active" | "revealed" | "closed";
@@ -99,9 +100,23 @@ function knownPlayer(playerId: string): Guest {
 }
 
 async function activeLobby(db: D1Database) {
-  return db.prepare("SELECT * FROM hangout_lobbies WHERE game_type = ? AND status != 'closed' ORDER BY created_at DESC LIMIT 1")
+  const lobby = await db.prepare("SELECT * FROM hangout_lobbies WHERE game_type = ? AND status != 'closed' ORDER BY created_at DESC LIMIT 1")
     .bind(GAME_TYPE)
     .first<LobbyRow>();
+  if (!lobby) return null;
+
+  const lastActivity = Date.parse(lobby.updated_at);
+  if (!Number.isFinite(lastActivity) || Date.now() - lastActivity < STALE_LOBBY_AFTER_MS) return lobby;
+
+  const statements = [
+    db.prepare("UPDATE hangout_lobbies SET status = 'closed', updated_at = ? WHERE id = ? AND status != 'closed'")
+      .bind(new Date().toISOString(), lobby.id),
+  ];
+  if (lobby.current_round_id && lobby.status === "active") {
+    statements.unshift(db.prepare("UPDATE hangout_rounds SET status = 'ended' WHERE id = ? AND status = 'active'").bind(lobby.current_round_id));
+  }
+  await db.batch(statements);
+  return null;
 }
 
 async function lobbyMembers(db: D1Database, lobbyId: string) {
@@ -176,7 +191,7 @@ export async function createHangoutLobby(playerId: string) {
   const player = knownPlayer(playerId);
   const { DB } = bindings();
   await ensureHangoutSchema(DB);
-  if (await activeLobby(DB)) throw new HangoutError("A Crossed Wires lobby is already open.", 409);
+  if (await activeLobby(DB)) throw new HangoutError("A One Question Off lobby is already open.", 409);
   const lobbyId = crypto.randomUUID();
   const now = new Date().toISOString();
   try {
@@ -187,7 +202,7 @@ export async function createHangoutLobby(playerId: string) {
         .bind(lobbyId, player.id, player.name, now),
     ]);
   } catch {
-    throw new HangoutError("A Crossed Wires lobby is already open.", 409);
+    throw new HangoutError("A One Question Off lobby is already open.", 409);
   }
   return getHangoutState(playerId);
 }
@@ -199,9 +214,12 @@ export async function joinHangoutLobby(playerId: string) {
   const lobby = await activeLobby(DB);
   if (!lobby) throw new HangoutError("There is no open game to join.", 404);
   if (lobby.status === "active") throw new HangoutError("A round is in progress. Join when it is revealed.", 409);
-  await DB.prepare("INSERT OR IGNORE INTO hangout_lobby_players (lobby_id, player_id, player_name, joined_at) VALUES (?, ?, ?, ?)")
-    .bind(lobby.id, player.id, player.name, new Date().toISOString())
-    .run();
+  const now = new Date().toISOString();
+  await DB.batch([
+    DB.prepare("INSERT OR IGNORE INTO hangout_lobby_players (lobby_id, player_id, player_name, joined_at) VALUES (?, ?, ?, ?)")
+      .bind(lobby.id, player.id, player.name, now),
+    DB.prepare("UPDATE hangout_lobbies SET updated_at = ? WHERE id = ?").bind(now, lobby.id),
+  ]);
   return getHangoutState(playerId);
 }
 
@@ -220,8 +238,46 @@ export async function leaveHangoutLobby(playerId: string) {
     statements.push(DB.prepare("UPDATE hangout_lobbies SET status = 'closed', updated_at = ? WHERE id = ?").bind(new Date().toISOString(), lobby.id));
   } else if (lobby.host_player_id === playerId) {
     statements.push(DB.prepare("UPDATE hangout_lobbies SET host_player_id = ?, updated_at = ? WHERE id = ?").bind(remaining[0].player_id, new Date().toISOString(), lobby.id));
+  } else {
+    statements.push(DB.prepare("UPDATE hangout_lobbies SET updated_at = ? WHERE id = ?").bind(new Date().toISOString(), lobby.id));
   }
   await DB.batch(statements);
+  return getHangoutState(playerId);
+}
+
+export async function claimHangoutHost(playerId: string) {
+  knownPlayer(playerId);
+  const { DB } = bindings();
+  await ensureHangoutSchema(DB);
+  const lobby = await activeLobby(DB);
+  if (!lobby) throw new HangoutError("There is no open game.", 404);
+  const members = await lobbyMembers(DB, lobby.id);
+  if (!members.some((member) => member.player_id === playerId)) throw new HangoutError("Join the lobby before taking over as host.", 403);
+  if (lobby.host_player_id === playerId) return getHangoutState(playerId);
+
+  await DB.prepare("UPDATE hangout_lobbies SET host_player_id = ?, updated_at = ? WHERE id = ? AND status != 'closed'")
+    .bind(playerId, new Date().toISOString(), lobby.id)
+    .run();
+  return getHangoutState(playerId);
+}
+
+export async function removeHangoutPlayer(playerId: string, targetPlayerId: string) {
+  knownPlayer(playerId);
+  const target = knownPlayer(targetPlayerId);
+  const { DB } = bindings();
+  await ensureHangoutSchema(DB);
+  const lobby = await activeLobby(DB);
+  if (!lobby) throw new HangoutError("There is no open game.", 404);
+  if (lobby.host_player_id !== playerId) throw new HangoutError("Only the host can remove a player.", 403);
+  if (lobby.status === "active") throw new HangoutError("Finish this round before removing a player.", 409);
+  if (targetPlayerId === playerId) throw new HangoutError("Use Leave Lobby if you want to step out.", 409);
+  const members = await lobbyMembers(DB, lobby.id);
+  if (!members.some((member) => member.player_id === targetPlayerId)) throw new HangoutError(`${target.name} is no longer in this lobby.`, 409);
+
+  await DB.batch([
+    DB.prepare("DELETE FROM hangout_lobby_players WHERE lobby_id = ? AND player_id = ?").bind(lobby.id, targetPlayerId),
+    DB.prepare("UPDATE hangout_lobbies SET updated_at = ? WHERE id = ?").bind(new Date().toISOString(), lobby.id),
+  ]);
   return getHangoutState(playerId);
 }
 

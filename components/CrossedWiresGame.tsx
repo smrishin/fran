@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { HangoutLobbyState } from "../data/hangout";
 import type { Guest } from "../data/trip";
 
-type HangoutAction = "create" | "join" | "leave" | "start" | "next" | "reveal" | "end";
+type HangoutAction = "create" | "join" | "leave" | "start" | "next" | "reveal" | "claimHost" | "remove" | "end";
 
 function initialsFor(name: string) {
   return name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
@@ -46,14 +46,14 @@ export function CrossedWiresGame({ player, onBack }: { player: Guest; onBack: ()
     return () => window.clearInterval(interval);
   }, [refresh]);
 
-  const act = async (action: HangoutAction) => {
+  const act = async (action: HangoutAction, targetPlayerId = "") => {
     setBusyAction(action);
     setError("");
     try {
       const response = await fetch("/api/hangout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, targetPlayerId }),
       });
       setGameState(await responseJson<HangoutLobbyState>(response));
     } catch (actionError) {
@@ -93,6 +93,14 @@ export function CrossedWiresGame({ player, onBack }: { player: Guest; onBack: ()
     if (window.confirm("End this game for everyone?")) void act("end");
   };
 
+  const confirmHostTakeover = () => {
+    if (window.confirm("Take over as host? Do this only if the current host is away.")) void act("claimHost");
+  };
+
+  const confirmRemovePlayer = (targetPlayerId: string, playerName: string) => {
+    if (window.confirm(`Remove ${playerName} from this lobby? They can rejoin later.`)) void act("remove", targetPlayerId);
+  };
+
   const lobby = gameState?.lobby;
   const viewer = gameState?.viewer;
   const round = lobby?.currentRound;
@@ -108,7 +116,7 @@ export function CrossedWiresGame({ player, onBack }: { player: Guest; onBack: ()
       <main className="cw-stage section-shell">
         <header className="cw-title">
           <p className="eyebrow">HANGOUT · GAME 01</p>
-          <h1>Crossed<br/><em>Wires.</em></h1>
+          <h1>One Question<br/><em>Off.</em></h1>
           <p>One room. Two questions. Find the answer that came from somewhere else.</p>
         </header>
 
@@ -122,7 +130,7 @@ export function CrossedWiresGame({ player, onBack }: { player: Guest; onBack: ()
             <ol>
               <li><b>1</b><span>Everyone joins as themselves.</span></li>
               <li><b>2</b><span>Each player privately checks one question.</span></li>
-              <li><b>3</b><span>Phones go down. Talk, listen, and spot the crossed wire.</span></li>
+              <li><b>3</b><span>Phones go down. Talk, listen, and spot the answer that’s one question off.</span></li>
             </ol>
             <button className="cw-primary" type="button" disabled={busyAction !== null} onClick={() => void act("create")}>{busyAction === "create" ? "Opening room…" : "Start game night →"}</button>
           </section>
@@ -135,7 +143,11 @@ export function CrossedWiresGame({ player, onBack }: { player: Guest; onBack: ()
                   <div key={member.playerId} className={member.playerId === player.id ? "is-you" : ""}>
                     <span>{initialsFor(member.playerName)}</span>
                     <b>{member.playerName}{member.playerId === player.id ? " · You" : ""}</b>
-                    {member.isHost && <small>HOST</small>}
+                    <span className="cw-member-action">
+                      {member.isHost ? <small>HOST</small> : viewer?.isHost && lobby.status !== "active" ? (
+                        <button type="button" disabled={busyAction !== null} aria-label={`Remove ${member.playerName} from lobby`} onClick={() => confirmRemovePlayer(member.playerId, member.playerName)}>Remove</button>
+                      ) : null}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -150,14 +162,18 @@ export function CrossedWiresGame({ player, onBack }: { player: Guest; onBack: ()
               {viewer?.isMember && viewer.canLeave && (
                 <button className="cw-text-button" type="button" disabled={busyAction !== null} onClick={() => void act("leave")}>Leave lobby</button>
               )}
+
+              {viewer?.isMember && !viewer.isHost && (
+                <div className="cw-host-recovery"><div><b>Host stepped away?</b><p>Take over to keep the current round moving.</p></div><button type="button" disabled={busyAction !== null} onClick={confirmHostTakeover}>{busyAction === "claimHost" ? "Taking over…" : "Take over as host"}</button></div>
+              )}
             </section>
 
             {viewer?.isMember && lobby.status === "waiting" && (
               <section className="cw-card cw-round-card">
                 <small>ROUND SETUP</small>
                 <h2>{memberCount < 3 ? "Waiting for the crew." : "The room is ready."}</h2>
-                <p>{memberCount < 3 ? `${3 - memberCount} more ${3 - memberCount === 1 ? "player" : "players"} needed. Crossed Wires works with 3–7 people.` : viewer.isHost ? "Start when everyone has joined and can see their own phone." : "The host will start when everyone is settled."}</p>
-                {viewer.isHost ? <button className="cw-primary" type="button" disabled={memberCount < 3 || busyAction !== null} onClick={() => void act("start")}>{busyAction === "start" ? "Wiring the round…" : "Start round →"}</button> : <div className="cw-waiting"><i/><span>WAITING FOR HOST</span></div>}
+                <p>{memberCount < 3 ? `${3 - memberCount} more ${3 - memberCount === 1 ? "player" : "players"} needed. One Question Off works with 3–7 people.` : viewer.isHost ? "Start when everyone has joined and can see their own phone." : "The host will start when everyone is settled."}</p>
+                {viewer.isHost ? <button className="cw-primary" type="button" disabled={memberCount < 3 || busyAction !== null} onClick={() => void act("start")}>{busyAction === "start" ? "Starting the round…" : "Start round →"}</button> : <div className="cw-waiting"><i/><span>WAITING FOR HOST</span></div>}
               </section>
             )}
 
@@ -196,7 +212,7 @@ export function CrossedWiresGame({ player, onBack }: { player: Guest; onBack: ()
                 </div>
                 {viewer?.isMember && viewer.isHost ? (
                   <div className="cw-round-actions">
-                    <button className="cw-primary" type="button" disabled={busyAction !== null} onClick={() => void act("next")}>{busyAction === "next" ? "Wiring the next one…" : "Next round →"}</button>
+                    <button className="cw-primary" type="button" disabled={busyAction !== null} onClick={() => void act("next")}>{busyAction === "next" ? "Picking the next question…" : "Next round →"}</button>
                     <button className="cw-secondary" type="button" disabled={busyAction !== null} onClick={confirmEnd}>End game</button>
                   </div>
                 ) : <p className="cw-host-wait">The host can start another round when everyone is ready.</p>}

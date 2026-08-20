@@ -43,7 +43,7 @@ export type HangoutLobbyState = {
 export const hangoutGames: HangoutGame[] = [
   {
     id: "crossed-wires",
-    title: "Crossed Wires",
+    title: "One Question Off",
     tagline: "Same conversation. One different question.",
     description: "Check your private prompt, put the phone down, and work out whose answer came from somewhere else.",
   },

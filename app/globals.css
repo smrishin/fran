@@ -246,10 +246,14 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .cw-members > div.is-you { border-color: rgba(239,101,74,.28); background: rgba(239,101,74,.055); }
 .cw-members > div > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--lake); color: white; font-family: var(--font-mono); font-size: 7px; }
 .cw-members b { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.cw-members small { color: var(--sun); font-family: var(--font-mono); font-size: 6px; letter-spacing: .1em; }
+.cw-member-action { width: auto !important; height: auto !important; display: block !important; border-radius: 0 !important; background: transparent !important; }
+.cw-member-action small { color: var(--sun); font-family: var(--font-mono); font-size: 6px; letter-spacing: .1em; }
+.cw-member-action button { padding: 4px 0; border: 0; border-bottom: 1px solid rgba(255,255,255,.28); background: transparent; color: rgba(255,255,255,.55); font-family: var(--font-mono); font-size: 6px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
 .cw-join-panel { margin-top: 22px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: space-between; gap: 22px; }
 .cw-join-panel h3 { margin: 0 0 5px; font-size: 15px; }.cw-join-panel p { max-width: 420px; margin: 0; font-size: 11px; line-height: 1.55; opacity: .58; }
 .cw-text-button { margin-top: 20px; padding: 3px 0; border: 0; border-bottom: 1px solid rgba(255,255,255,.3); background: transparent; color: rgba(255,255,255,.52); font-family: var(--font-mono); font-size: 7px; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
+.cw-host-recovery { margin-top: 20px; padding: 17px 0 0; border-top: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.cw-host-recovery b { display: block; font-size: 10px; }.cw-host-recovery p { margin: 4px 0 0; font-size: 9px; opacity: .45; }.cw-host-recovery button { min-height: 36px; padding: 0 12px; border: 1px solid rgba(255,255,255,.18); border-radius: 5px; background: transparent; color: rgba(255,255,255,.72); font-family: var(--font-mono); font-size: 7px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
 .cw-round-card, .cw-question-card, .cw-reveal-card { padding: clamp(27px, 4.5vw, 52px); overflow: hidden; position: relative; }
 .cw-round-card::after, .cw-question-card::after { content: ""; width: 230px; height: 230px; position: absolute; right: -120px; top: -135px; border: 1px solid rgba(255,255,255,.06); border-radius: 50%; box-shadow: 0 0 0 40px rgba(255,255,255,.012), 0 0 0 80px rgba(255,255,255,.009); pointer-events: none; }
 .cw-round-card h2 { margin-top: 12px; }
@@ -717,6 +721,8 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
   .cw-members { grid-template-columns: 1fr; }
   .cw-join-panel { display: block; }
   .cw-join-panel .cw-primary { width: 100%; margin-top: 17px; }
+  .cw-host-recovery { align-items: stretch; flex-direction: column; }
+  .cw-host-recovery button { min-height: 42px; }
   .cw-question-card { min-height: 430px; }
   .cw-question-card blockquote { margin-top: 36px; font-size: clamp(29px, 9.5vw, 40px); }
   .cw-host-controls { grid-template-columns: 1fr; }

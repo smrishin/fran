@@ -36,8 +36,9 @@ export async function POST(request: Request) {
 
   const storage = await import("../../../lib/hangout-storage");
   try {
-    const body = await request.json() as { action?: unknown };
+    const body = await request.json() as { action?: unknown; targetPlayerId?: unknown };
     const action = typeof body.action === "string" ? body.action : "";
+    const targetPlayerId = typeof body.targetPlayerId === "string" ? body.targetPlayerId.trim() : "";
     const playerId = await playerIdFrom(request);
     if (!playerId) throw new storage.HangoutError("Choose your player first.");
 
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
       start: () => storage.startHangoutRound(playerId),
       next: () => storage.startHangoutRound(playerId),
       reveal: () => storage.revealHangoutRound(playerId),
+      claimHost: () => storage.claimHangoutHost(playerId),
+      remove: () => storage.removeHangoutPlayer(playerId, targetPlayerId),
       end: () => storage.endHangoutLobby(playerId),
     };
     const run = actions[action];

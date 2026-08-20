@@ -131,9 +131,10 @@ test("mobile Plan groups itinerary and dates while Hangout reuses trip identitie
   assert.match(quest, /GuestIdentityPicker/);
   assert.equal(games.hangoutGames.length, 1);
   assert.equal(games.hangoutGames[0].id, "crossed-wires");
+  assert.equal(games.hangoutGames[0].title, "One Question Off");
 });
 
-test("Crossed Wires keeps private prompts behind a player-only endpoint", async () => {
+test("One Question Off keeps private prompts behind a player-only endpoint", async () => {
   const lobbyResponse = await render("/api/hangout?playerId=rishi");
   const questionResponse = await render("/api/hangout/question?playerId=rishi");
   const client = await readFile(new URL("../components/CrossedWiresGame.tsx", import.meta.url), "utf8");
@@ -151,7 +152,7 @@ test("Crossed Wires keeps private prompts behind a player-only endpoint", async 
   assert.match(storage, /round\.status === "revealed"/);
 });
 
-test("Crossed Wires supports a reusable lobby and host-controlled rounds", async () => {
+test("One Question Off supports a reusable lobby and host-controlled rounds", async () => {
   const client = await readFile(new URL("../components/CrossedWiresGame.tsx", import.meta.url), "utf8");
   const questions = await import("../lib/crossed-wires-questions.ts");
 
@@ -163,4 +164,19 @@ test("Crossed Wires supports a reusable lobby and host-controlled rounds", async
   assert.match(client, /Reveal the questions\? Make sure everyone has made their guess first\./);
   assert.match(client, /Next round/);
   assert.match(client, /setInterval/);
+});
+
+test("Hangout recovers when the host or another player goes away", async () => {
+  const client = await readFile(new URL("../components/CrossedWiresGame.tsx", import.meta.url), "utf8");
+  const route = await readFile(new URL("../app/api/hangout/route.ts", import.meta.url), "utf8");
+  const storage = await readFile(new URL("../lib/hangout-storage.ts", import.meta.url), "utf8");
+
+  assert.match(client, /Take over as host/);
+  assert.match(client, /Remove .* from this lobby\? They can rejoin later\./);
+  assert.match(route, /claimHost: \(\) => storage\.claimHangoutHost/);
+  assert.match(route, /remove: \(\) => storage\.removeHangoutPlayer/);
+  assert.match(storage, /STALE_LOBBY_AFTER_MS = 3 \* 60 \* 60 \* 1000/);
+  assert.match(storage, /export async function claimHangoutHost/);
+  assert.match(storage, /export async function removeHangoutPlayer/);
+  assert.match(storage, /lobby\.status === "active".*Finish this round before removing a player/s);
 });
