@@ -49,6 +49,21 @@ test("starts the trip with a Day 0 arrivals plan", () => {
   assert.match(itinerary[0].activities[0].title, /arrivals/i);
 });
 
+test("keeps the revised Days 2–5 route in the hard-coded itinerary shell", () => {
+  assert.deepEqual(
+    itinerary.filter((day) => day.day >= 2 && day.day <= 5).map((day) => day.destination),
+    ["Monterey", "Redwoods + Santa Cruz", "Yosemite", "Yosemite"],
+  );
+  assert.deepEqual(
+    trip.locations,
+    ["San Francisco", "Monterey", "Capitola", "Henry Cowell", "Santa Cruz", "Yosemite", "Sunnyvale"],
+  );
+  assert.deepEqual(
+    trip.heroStops,
+    ["San Francisco", "Monterey", "Santa Cruz", "Yosemite", "Sunnyvale"],
+  );
+});
+
 test("renders official Chrome install help for iPhone and Android", async () => {
   const response = await render("/install");
   assert.equal(response.status, 200);
