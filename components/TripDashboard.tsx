@@ -363,8 +363,6 @@ function AppHeader({ section, onNavigate }: { section: Section; onNavigate: Navi
 }
 
 function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: CalendarPayload | null }) {
-  const weekStops = ["Big Sur", "Santa Cruz", "Lake Tahoe", "San Francisco", "Sunnyvale"];
-
   return (
     <>
       <section className="hero page-enter">
@@ -375,15 +373,13 @@ function HomeView({ onNavigate, calendar }: { onNavigate: Navigate; calendar: Ca
         </div>
 
         <div className="route-card" aria-label="Trip route concept">
+          <div className="route-card-top"><span>THE ROUTE</span><span>{trip.heroStops.length} STOPS · 9 DAYS</span></div>
           <div className="route-map">
-            <div className="sun" />
-            <div className="mountains"><i/><i/><i/></div>
-            <div className="water-lines"><i/><i/><i/></div>
-            {weekStops.map((stop, index) => (
+            {trip.heroStops.map((stop, index) => (
               <div className={`route-stop stop-${index + 1}`} key={stop}><span>{index + 1}</span><b>{stop}</b></div>
             ))}
           </div>
-          <div className="route-card-bottom"><span>↓ PACIFIC COAST</span><span>OCT 23 — NOV 01</span></div>
+          <div className="route-card-bottom"><span>↓ {trip.routeCaption.toUpperCase()}</span><span>OCT 23 — NOV 01</span></div>
         </div>
       </section>
 
