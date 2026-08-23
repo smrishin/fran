@@ -1,4 +1,4 @@
-const CACHE_NAME = "fog-fire-offline-v1";
+const CACHE_NAME = "fog-fire-offline-v2";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/favicon-32.png",
@@ -81,6 +81,20 @@ self.addEventListener("fetch", (event) => {
           events: [],
           message: "Offline · no saved calendar available.",
         });
+      }
+    })());
+    return;
+  }
+
+  if (url.pathname === "/api/quest") {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      try {
+        const response = await fetch(request);
+        await cacheResponse(cache, "/api/quest", response.clone());
+        return response;
+      } catch {
+        return (await cache.match("/api/quest")) ?? Response.json({ completions: [] });
       }
     })());
     return;
