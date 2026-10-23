@@ -8,3 +8,12 @@ Times are scheduled, local to each airport. Flight numbers are from the shared t
 - Sourav departure November 3: WN1652 SFO 13:20 PST → DEN 16:55 MST (2h35), effective November 3–11 on Tuesday/Wednesday. https://www.flight.info/WN1652
 
 The user confirmed Sourav’s onward flight is WN2387. On November 3 it operates DEN 18:40 MST → TPA 23:55 EST, 3h15, effective November 3–11 on Tuesday/Wednesday: https://www.flight.info/WN2387 . Combined with WN1652, the Denver layover is 1h45 and total SFO–TPA elapsed journey is 7h35. November departures use standard time after the November 1 daylight saving time transition.
+
+## Ashwin and Nirosha (same itinerary)
+
+- October 24: WN1291 CVG 09:05 EDT → MDW 09:20 CDT (1h15), operates only October 24: https://www.flight.info/WN1291
+- October 24: WN4367 MDW 11:05 CDT → SFO 13:40 PDT (4h35), Saturday schedule valid through October 24: https://www.flight.info/WN4367
+- November 1: WN4357 SFO 09:05 PST → AUS 14:40 CST (3h35), effective November 1–15 on Monday/Thursday/Friday/Sunday: https://www.flight.info/WN4357
+- November 1: WN878 AUS 16:05 CST → CVG 19:35 EST (2h30), effective November 1–2 on Monday/Sunday: https://www.flight.info/WN878
+
+Calculated layovers: MDW 1h45; AUS 1h25. Total elapsed travel: outbound 7h35; return 7h30. Ground transport windows from the shared calendar are labeled separately. Local travelers Rishi, Deepa, and Harshith do not need flight details.
