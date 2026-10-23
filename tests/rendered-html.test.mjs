@@ -156,7 +156,7 @@ test("One Question Off keeps private prompts behind a player-only endpoint", asy
 
   assert.equal(lobbyResponse.status, 401);
   assert.equal(questionResponse.status, 401);
-  assert.doesNotMatch(client, /crossed-wires-questions/);
+  assert.doesNotMatch(client, /one-question-off-questions/);
   assert.doesNotMatch(client, /you are (?:the )?imposter/i);
   assert.doesNotMatch(client, /question\?playerId/);
   assert.match(questionRoute, /HANGOUT_IDENTITY_COOKIE_NAME/);
@@ -167,10 +167,11 @@ test("One Question Off keeps private prompts behind a player-only endpoint", asy
 
 test("One Question Off supports a reusable lobby and host-controlled rounds", async () => {
   const client = await readFile(new URL("../components/CrossedWiresGame.tsx", import.meta.url), "utf8");
-  const questions = await import("../lib/crossed-wires-questions.ts");
+  const questions = await import("../data/one-question-off-questions.ts");
 
-  assert.ok(questions.crossedWiresQuestionPairs.length >= 3);
-  assert.ok(questions.crossedWiresQuestionPairs.every((pair) => pair.mainQuestion && pair.imposterQuestion));
+  assert.equal(questions.oneQuestionOffQuestionPairs.length, 50);
+  assert.equal(new Set(questions.oneQuestionOffQuestionPairs.map((pair) => pair.id)).size, 50);
+  assert.ok(questions.oneQuestionOffQuestionPairs.every((pair) => pair.mainQuestion && pair.imposterQuestion));
   assert.match(client, /create.*join.*leave.*start.*next.*reveal.*end/s);
   assert.match(client, /Show my question/);
   assert.match(client, /Hide my question/);

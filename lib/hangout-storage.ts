@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import type { HangoutLobbyState, HangoutRoundState } from "../data/hangout";
 import { guests, type Guest } from "../data/trip";
-import { crossedWiresQuestionPairs } from "./crossed-wires-questions";
+import { oneQuestionOffQuestionPairs } from "../data/one-question-off-questions";
 
 const GAME_TYPE = "crossed-wires";
 const STALE_LOBBY_AFTER_MS = 3 * 60 * 60 * 1000;
@@ -133,7 +133,7 @@ async function currentRound(db: D1Database, roundId: string | null) {
 
 function publicRound(round: RoundRow | null): HangoutRoundState | null {
   if (!round || round.status === "ended") return null;
-  const questionPair = crossedWiresQuestionPairs.find((pair) => pair.id === round.question_pair_id);
+  const questionPair = oneQuestionOffQuestionPairs.find((pair) => pair.id === round.question_pair_id);
   if (!questionPair) throw new HangoutError("This round's questions are unavailable.", 503);
   return {
     id: round.id,
@@ -301,7 +301,7 @@ export async function startHangoutRound(playerId: string) {
   const members = await lobbyMembers(DB, lobby.id);
   if (members.length < 3) throw new HangoutError("You need at least 3 players to start.", 409);
 
-  const questionPair = crossedWiresQuestionPairs[secureRandomIndex(crossedWiresQuestionPairs.length)]!;
+  const questionPair = oneQuestionOffQuestionPairs[secureRandomIndex(oneQuestionOffQuestionPairs.length)]!;
   const imposter = members[secureRandomIndex(members.length)]!;
   const roundId = crypto.randomUUID();
   const now = new Date().toISOString();
@@ -364,7 +364,7 @@ export async function getPrivateHangoutQuestion(playerId: string) {
     .bind(round.id, playerId)
     .first<{ player_id: string }>();
   if (!participant) throw new HangoutError("You are not part of this round.", 403);
-  const pair = crossedWiresQuestionPairs.find((item) => item.id === round.question_pair_id);
+  const pair = oneQuestionOffQuestionPairs.find((item) => item.id === round.question_pair_id);
   if (!pair) throw new HangoutError("This round's question is unavailable.", 503);
   return { roundId: round.id, question: playerId === round.imposter_player_id ? pair.imposterQuestion : pair.mainQuestion };
 }
