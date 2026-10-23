@@ -70,6 +70,7 @@ function ProofComposer({ task, player, completion, onClose, onSaved }: {
 }) {
   const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [busy, setBusy] = useState(false);
+  const [removePhotoId, setRemovePhotoId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const libraryInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -125,6 +126,7 @@ function ProofComposer({ task, player, completion, onClose, onSaved }: {
       const result = await response.json() as { completion: QuestCompletion | null; error?: string };
       if (!response.ok) throw new Error(result.error ?? "Could not remove photo.");
       onSaved(result.completion, task.id);
+      setRemovePhotoId(null);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not remove photo."); }
     finally { setBusy(false); }
   };
@@ -138,10 +140,15 @@ function ProofComposer({ task, player, completion, onClose, onSaved }: {
         <div className="quest-photo-slots">
           {photos.map((photo, index) => <div className="quest-photo-slot" key={photo.id}>
             <img src={photo.thumbnailUrl || photo.photoUrl} alt={`Challenge moment ${index + 1}`} />
-            <div><button type="button" disabled={busy} onClick={() => { replaceId.current = photo.id; libraryInput.current?.click(); }}>Replace</button><button type="button" disabled={busy} onClick={() => void remove(photo.id)}>Remove</button></div>
+            <div><button type="button" disabled={busy} onClick={() => { replaceId.current = photo.id; libraryInput.current?.click(); }}>Replace</button><button type="button" disabled={busy} onClick={() => { setRemovePhotoId(photo.id); setMessage(""); }}>Remove</button></div>
           </div>)}
           {Array.from({ length: Math.max(0, 3 - photos.length) }, (_, index) => <div className="quest-photo-slot empty" key={`empty-${index}`}><span>＋</span><small>Photo {photos.length + index + 1}</small></div>)}
         </div>
+        {removePhotoId && <div className="quest-delete-confirm quest-remove-confirm" role="group" aria-label="Confirm photo removal">
+          <p>Remove this photo permanently?{photos.length === 1 ? " This challenge will return to incomplete." : " Your other photos will stay."}</p>
+          <button type="button" disabled={busy} onClick={() => void remove(removePhotoId)}>{busy ? "Removing…" : "Yes, remove photo"}</button>
+          <button type="button" disabled={busy} onClick={() => setRemovePhotoId(null)}>Cancel</button>
+        </div>}
         <p>{photos.length ? "Challenge complete! Add up to three favorites, or swap in a better shot." : "One photo completes this challenge. Add up to three favorites."}</p>
         <input ref={libraryInput} className="visually-hidden" type="file" accept="image/*" multiple disabled={busy} onChange={choosePhotos} />
         <input ref={cameraInput} className="visually-hidden" type="file" accept="image/*" capture="environment" disabled={busy} onChange={choosePhotos} />

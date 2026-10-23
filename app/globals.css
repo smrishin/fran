@@ -866,3 +866,6 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 .quest-delete-confirm button { min-height: 48px; padding: 12px 16px; line-height: 1.5; }
 .quest-delete-confirm button:last-child { background: transparent; border: 1px solid currentColor; color: inherit; }
 @media (max-width: 420px) { .quest-delete-confirm { grid-template-columns: 1fr; } }
+.quest-remove-confirm { padding: 14px; border: 1px solid var(--coral); border-radius: 8px; margin-top: 12px; }
+.quest-remove-confirm button { min-height: 48px; border: 0; border-radius: 5px; background: var(--coral); color: white; font-family: var(--font-mono); font-size: 10px; font-weight: 700; cursor: pointer; }
+.quest-remove-confirm button:disabled { opacity: .6; cursor: wait; }
