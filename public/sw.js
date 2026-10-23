@@ -1,4 +1,4 @@
-const CACHE_NAME = "fog-fire-offline-v2";
+const CACHE_NAME = "fog-fire-offline-v3";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/favicon-32.png",
@@ -67,6 +67,10 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+  // Live game state and private prompts must never use the offline asset cache.
+  // Only the calendar and Quest overview have explicit offline fallbacks below.
+  if (url.pathname.startsWith("/api/") && url.pathname !== "/api/calendar" && url.pathname !== "/api/quest") return;
 
   if (url.pathname === "/api/calendar") {
     event.respondWith((async () => {
