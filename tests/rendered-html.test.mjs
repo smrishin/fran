@@ -84,11 +84,9 @@ test("keeps the unlocked dashboard and last calendar available offline", async (
   assert.match(worker, /request\.mode === "navigate"/);
 });
 
-test("defines a separate 16-slot Quest board without inventing final challenges", () => {
-  assert.equal(questTasks.length, 16);
-  assert.equal(new Set(questTasks.map((task) => task.id)).size, 16);
-  assert.ok(questTasks.every((task) => /Challenge slot/.test(task.title)));
-  assert.ok(questTasks.every((task) => /will be added/.test(task.description)));
+test("defines real photo prompts with stable unique IDs", () => {
+  assert.equal(new Set(questTasks.map(task => task.id)).size, questTasks.length);
+  assert.ok(questTasks.every(task => task.description && task.title && !/Challenge slot/.test(task.title)));
 });
 
 test("keeps Quest data private and uses shared object storage", async () => {
@@ -98,7 +96,7 @@ test("keeps Quest data private and uses shared object storage", async () => {
   const hosting = JSON.parse(await readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"));
   const storage = await readFile(new URL("../lib/quest-storage.ts", import.meta.url), "utf8");
   assert.equal(hosting.r2, "STORAGE");
-  assert.match(storage, /`bingo\//);
+  assert.match(storage, /`quest\//);
   assert.doesNotMatch(storage, /BINGO_PHOTOS/);
 });
 

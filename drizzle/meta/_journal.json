@@ -15,6 +15,13 @@
       "when": 1787192407442,
       "tag": "0001_dark_gideon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792752546259,
+      "tag": "0002_worried_the_fallen",
+      "breakpoints": true
     }
   ]
 }

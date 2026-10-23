@@ -1,9 +1,9 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Proof previews and protected R2 images are dynamic user uploads. */
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
-import { questTasks, type QuestCompletion, type QuestTask } from "../data/quest";
+import { questTasks, questsForPlayer, type QuestCompletion, type QuestTask } from "../data/quest";
 import { guests, type Guest } from "../data/trip";
 import { GuestIdentityPicker } from "./GuestIdentityPicker";
 
@@ -27,11 +27,11 @@ function formatMemoryStamp(value: string) {
   return `${month} ’${String(date.getFullYear()).slice(-2)}`;
 }
 
-function useModalDismiss(onClose: () => void) {
+function useModalDismiss(onClose: () => void, enabled = true) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && enabled) onClose();
     };
 
     document.body.style.overflow = "hidden";
@@ -40,103 +40,117 @@ function useModalDismiss(onClose: () => void) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [onClose]);
+  }, [onClose, enabled]);
 }
 
-function ProofComposer({ task, player, onClose, onSaved }: {
+async function thumbnailFor(file: File): Promise<Blob | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const scale = Math.min(1, 480 / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.8));
+  } catch { return null; }
+  finally { URL.revokeObjectURL(url); }
+}
+
+type PendingPhoto = { id: number; uploadId: string; file: File; status: "waiting" | "uploading" | "error" | "saved"; message?: string; replaceId?: string };
+
+function ProofComposer({ task, player, completion, onClose, onSaved }: {
   task: QuestTask;
   player: Guest;
+  completion?: QuestCompletion;
   onClose: () => void;
-  onSaved: (completion: QuestCompletion) => void;
+  onSaved: (completion: QuestCompletion | null, taskId: string) => void;
 }) {
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+  const [pending, setPending] = useState<PendingPhoto[]>([]);
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const libraryInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
-  const previewUrl = useRef<string | null>(null);
-  const closeTimer = useRef<number | null>(null);
+  const replaceId = useRef<string | undefined>(undefined);
+  const nextId = useRef(0);
+  const photos = completion?.photos ?? [];
+  useModalDismiss(onClose, !busy);
 
-  useModalDismiss(onClose);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
-      if (closeTimer.current) window.clearTimeout(closeTimer.current);
-    };
-  }, []);
-
-  const choosePhoto = (event: ChangeEvent<HTMLInputElement>) => {
-    const selected = event.target.files?.[0] ?? null;
-    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
-    previewUrl.current = selected ? URL.createObjectURL(selected) : null;
-    setPhoto(selected);
-    setPreview(previewUrl.current);
-    setStatus("idle");
+  const upload = async (items: PendingPhoto[]) => {
+    setBusy(true);
     setMessage("");
-  };
-
-  const clearPhoto = () => {
-    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
-    previewUrl.current = null;
-    setPhoto(null);
-    setPreview(null);
-  };
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!photo) {
-      setStatus("error");
-      setMessage("Choose or take a photo first.");
-      return;
+    for (const item of items) {
+      setPending((current) => current.map((photo) => photo.id === item.id ? { ...photo, status: "uploading", message: undefined } : photo));
+      try {
+        if (item.file.size > 10 * 1024 * 1024) throw new Error("Choose a photo under 10 MB.");
+        const form = new FormData();
+        form.set("taskId", task.id);
+        form.set("uploadId", item.uploadId);
+        form.set("playerId", player.id);
+        form.set("photo", item.file);
+        if (item.replaceId) form.set("replacePhotoId", item.replaceId);
+        const thumbnail = await thumbnailFor(item.file);
+        if (thumbnail) form.set("thumbnail", thumbnail, "thumbnail.jpg");
+        const response = await fetch("/api/quest/proof", { method: "POST", body: form });
+        const result = await response.json() as { completion?: QuestCompletion; error?: string };
+        if (!response.ok || !result.completion) throw new Error(result.error ?? "Upload failed.");
+        onSaved(result.completion, task.id);
+        setPending((current) => current.map((photo) => photo.id === item.id ? { ...photo, status: "saved" } : photo));
+      } catch (error) {
+        setPending((current) => current.map((photo) => photo.id === item.id ? { ...photo, status: "error", message: error instanceof Error ? error.message : "Upload failed." } : photo));
+      }
     }
+    setBusy(false);
+  };
 
-    setStatus("uploading");
+  const choosePhotos = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    const replacement = replaceId.current;
+    replaceId.current = undefined;
+    const available = replacement ? 1 : Math.max(0, 3 - photos.length);
+    const items: PendingPhoto[] = files.slice(0, available).map((file) => ({ id: nextId.current++, uploadId: crypto.randomUUID(), file, status: "waiting", replaceId: replacement }));
+    setPending((current) => [...current.filter((item) => item.status !== "saved"), ...items]);
+    if (items.length) void upload(items);
+    if (files.length > available) setMessage(`Only ${available} ${available === 1 ? "photo fits" : "photos fit"} in the remaining slots. The first ${available} selected will upload.`);
+  };
+
+  const remove = async (photoId: string) => {
+    setBusy(true);
     setMessage("");
-    const form = new FormData();
-    form.set("taskId", task.id);
-    form.set("playerId", player.id);
-    form.set("photo", photo);
-
     try {
-      const response = await fetch("/api/quest/proof", { method: "POST", body: form });
-      const result = await response.json() as { completion?: QuestCompletion; error?: string };
-      if (!response.ok || !result.completion) throw new Error(result.error ?? "Upload failed.");
-      setStatus("success");
-      setMessage("Proof saved. Challenge complete!");
-      onSaved(result.completion);
-      closeTimer.current = window.setTimeout(onClose, 3_000);
-    } catch (error) {
-      setStatus("error");
-      setMessage(error instanceof Error ? error.message : "The photo could not be saved. Try again.");
-    }
+      const response = await fetch("/api/quest/proof", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id, playerId: player.id, photoId }) });
+      const result = await response.json() as { completion: QuestCompletion | null; error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Could not remove photo.");
+      onSaved(result.completion, task.id);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not remove photo."); }
+    finally { setBusy(false); }
   };
 
   return createPortal(
-    <div className="quest-modal" role="dialog" aria-modal="true" aria-labelledby="quest-proof-title">
-      <button className="quest-modal-dismiss" type="button" aria-label="Close challenge" onClick={onClose} />
-      <form className="quest-proof-card" onSubmit={submit}>
-        <header>
-          <div><small>QUEST PROOF</small><h2 id="quest-proof-title">{task.title}</h2></div>
-          <button type="button" onClick={onClose} aria-label="Close">×</button>
-        </header>
+    <div className="quest-modal" role="dialog" aria-modal="true" aria-labelledby="quest-proof-title" aria-busy={busy}>
+      <button className="quest-modal-dismiss" type="button" aria-label="Close challenge" disabled={busy} onClick={onClose} />
+      <div className="quest-proof-card">
+        <header><div><small>{task.category ?? "QUEST"} · {photos.length}/3 PHOTOS</small><h2 id="quest-proof-title">{task.title}</h2></div><button type="button" disabled={busy} onClick={onClose} aria-label="Close">×</button></header>
         <p>{task.description}</p>
-        {preview ? (
-          <div className="quest-photo-preview"><img src={preview} alt="Selected challenge proof preview" /><button type="button" onClick={clearPhoto}>Choose another</button></div>
-        ) : (
-          <div className="quest-photo-empty"><span>✦</span><b>Add the moment</b><small>A photo is required before this challenge counts.</small></div>
-        )}
-        <input ref={libraryInput} className="visually-hidden" type="file" accept="image/*" onChange={choosePhoto} />
-        <input ref={cameraInput} className="visually-hidden" type="file" accept="image/*" capture="environment" onChange={choosePhoto} />
-        {!preview && <div className="quest-photo-actions"><button type="button" onClick={() => cameraInput.current?.click()}>Take photo</button><button type="button" onClick={() => libraryInput.current?.click()}>Photo library</button></div>}
-        {message && <p className={`quest-upload-message ${status}`} role={status === "error" ? "alert" : "status"}>{message}</p>}
-        <button className="quest-submit" type="submit" disabled={!photo || status === "uploading" || status === "success"}>
-          {status === "uploading" ? "Saving proof…" : status === "success" ? "Challenge complete ✓" : "Submit proof →"}
-        </button>
-      </form>
-    </div>,
-    document.body,
+        <div className="quest-photo-slots">
+          {photos.map((photo, index) => <div className="quest-photo-slot" key={photo.id}>
+            <img src={photo.thumbnailUrl || photo.photoUrl} alt={`Challenge moment ${index + 1}`} />
+            <div><button type="button" disabled={busy} onClick={() => { replaceId.current = photo.id; libraryInput.current?.click(); }}>Replace</button><button type="button" disabled={busy} onClick={() => void remove(photo.id)}>Remove</button></div>
+          </div>)}
+          {Array.from({ length: Math.max(0, 3 - photos.length) }, (_, index) => <div className="quest-photo-slot empty" key={`empty-${index}`}><span>＋</span><small>Photo {photos.length + index + 1}</small></div>)}
+        </div>
+        <p>{photos.length ? "Challenge complete! Add up to three favorites, or swap in a better shot." : "One photo completes this challenge. Add up to three favorites."}</p>
+        <input ref={libraryInput} className="visually-hidden" type="file" accept="image/*" multiple disabled={busy} onChange={choosePhotos} />
+        <input ref={cameraInput} className="visually-hidden" type="file" accept="image/*" capture="environment" disabled={busy} onChange={choosePhotos} />
+        {photos.length < 3 && <div className="quest-photo-actions"><button type="button" disabled={busy} onClick={() => cameraInput.current?.click()}>Take photo</button><button type="button" disabled={busy} onClick={() => { replaceId.current = undefined; libraryInput.current?.click(); }}>Photo library</button></div>}
+        <div aria-live="polite">{pending.map((item) => <div className={`quest-upload-item ${item.status}`} key={item.id}><span>{item.file.name}: {item.status === "uploading" ? "Uploading…" : item.status === "saved" ? "Saved ✓" : item.message ?? "Waiting…"}</span>{item.status === "error" && <button type="button" disabled={busy} onClick={() => void upload([item])}>Retry</button>}</div>)}</div>
+        {message && <p className="quest-upload-message error" role="alert">{message}</p>}
+        <button className="quest-submit" type="button" disabled={busy} onClick={onClose}>{busy ? "Saving photos…" : "Done →"}</button>
+      </div>
+    </div>, document.body,
   );
 }
 
@@ -148,6 +162,9 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
   onPrevious: () => void;
   onNext: () => void;
 }) {
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const photos = completion.photos?.length ? completion.photos : [{ id: completion.id, photoUrl: completion.photoUrl, thumbnailUrl: completion.thumbnailUrl }];
+  const selectedPhoto = photos[Math.min(photoIndex, photos.length - 1)];
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(true);
@@ -184,10 +201,15 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
     setSaveMessage("");
 
     try {
-      const response = await fetch(completion.photoUrl);
+      const response = await fetch(selectedPhoto.photoUrl);
       if (!response.ok) throw new Error("Photo could not be prepared.");
       const blob = await response.blob();
-      const extension = blob.type === "image/png" ? "png" : blob.type === "image/webp" ? "webp" : "jpg";
+      const extensions: Record<string, string> = {
+        "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp",
+        "image/heic": "heic", "image/heif": "heif", "image/avif": "avif", "image/gif": "gif",
+        "image/heic-sequence": "heics", "image/heif-sequence": "heifs",
+      };
+      const extension = extensions[blob.type.split(";")[0].toLowerCase()] ?? "jpg";
       const safeName = `${completion.playerName}-${taskTitle}`
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
@@ -225,13 +247,13 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
 
   return createPortal(
     <div className="quest-lightbox" role="dialog" aria-modal="true" aria-label={`Quest memory: ${taskTitle} by ${completion.playerName}`}>
-      <div className="quest-lightbox-backdrop" aria-hidden="true"><img src={completion.photoUrl} alt="" /></div>
+      <div className="quest-lightbox-backdrop" aria-hidden="true"><img src={selectedPhoto.photoUrl} alt="" /></div>
       <button className="quest-lightbox-dismiss" type="button" aria-label="Close memory" onClick={onClose} />
       <article className="quest-lightbox-frame">
         <button className="quest-lightbox-close" type="button" aria-label="Close photo" onClick={onClose}>×</button>
         <div className="quest-lightbox-photo" onTouchStart={beginSwipe} onTouchEnd={finishSwipe}>
           <button className="quest-lightbox-photo-dismiss" type="button" aria-label="Close memory" onClick={onClose} />
-          <img src={completion.photoUrl} alt={`${completion.playerName}'s Quest memory`} />
+          <img src={selectedPhoto.photoUrl} alt={`${completion.playerName}'s Quest memory`} />
           {total > 1 && <div className="quest-lightbox-side-nav" aria-label="Memory navigation">
             <button type="button" aria-label="Previous memory" onClick={onPrevious}>←</button>
             <button type="button" aria-label="Next memory" onClick={onNext}>→</button>
@@ -242,6 +264,7 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
           <button className="quest-lightbox-details-toggle" type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
             <span aria-hidden="true" /><b>Memory details</b><i aria-hidden="true">{detailsOpen ? "−" : "+"}</i>
           </button>
+          <div className="quest-lightbox-thumbnails">{photos.map((photo, index) => <button type="button" key={photo.id} className={index === photoIndex ? "active" : ""} aria-label={`View photo ${index + 1}`} aria-pressed={index === photoIndex} onClick={() => { setPhotoIndex(index); setSaveStatus("idle"); setSaveMessage(""); }}><img src={photo.thumbnailUrl || photo.photoUrl} alt="" /></button>)}</div>
           <div className="quest-lightbox-details-content">
             <div className="quest-lightbox-copy">
               <small>QUEST MEMORY · {completion.playerName}</small>
@@ -303,7 +326,8 @@ function GlowReel({ completions, onOpen }: { completions: QuestCompletion[]; onO
             <button className={`quest-memory tilt-${index % 6} memory-size-${index % 5}`} type="button" key={completion.id} onClick={() => onOpen(completion)}>
               <span className="quest-memory-tape" aria-hidden="true" />
               <div className="quest-memory-photo">
-                <img src={completion.photoUrl} alt={`${completion.playerName}'s memory from ${tasks.get(completion.taskId)?.title ?? "a Quest challenge"}`} loading={index < 4 ? "eager" : "lazy"} />
+                <img src={completion.thumbnailUrl || completion.photoUrl} alt={`${completion.playerName}'s memory from ${tasks.get(completion.taskId)?.title ?? "a Quest challenge"}`} loading={index < 4 ? "eager" : "lazy"} />
+                {completion.photos?.length > 1 && <span className="quest-memory-count">+{completion.photos.length - 1} photos</span>}
                 <span className="quest-memory-stamp" aria-hidden="true">CALIFORNIA<br/>{formatMemoryStamp(completion.completedAt)}</span>
                 <div className="quest-memory-caption">
                   <small>{completion.playerName}</small>
@@ -368,8 +392,13 @@ export function QuestView() {
     [completions, player?.id],
   );
 
-  const saved = (completion: QuestCompletion) => {
-    setCompletions((current) => [completion, ...current.filter((item) => item.id !== completion.id)]);
+  const playerTasks = questsForPlayer(player?.id ?? "");
+  const completedCount = playerTasks.filter((task) => playerCompletions.has(task.id)).length;
+  const saved = (completion: QuestCompletion | null, taskId: string) => {
+    setCompletions((current) => {
+      const remaining = current.filter((item) => !(item.playerId === player?.id && item.taskId === taskId));
+      return completion ? [completion, ...remaining] : remaining;
+    });
   };
 
   const lightboxIndex = lightbox ? completions.findIndex((completion) => completion.id === lightbox.id) : -1;
@@ -388,7 +417,7 @@ export function QuestView() {
   return (
     <div className="quest-page inner-page page-enter">
       <header className="quest-hero section-shell">
-        <div><p className="eyebrow">FOG & FIRE · FRIENDLY COMPETITION</p><h1>Quest.</h1><p>Sixteen moments waiting to become stories.</p></div>
+        <div><p className="eyebrow">FOG & FIRE · FRIENDLY COMPETITION</p><h1>Quest.</h1><p>Nine little adventures. Your own way to capture them.</p></div>
         <div className="quest-player-summary">
           <span>{player.initials}</span>
           <div><small>PLAYING AS</small><b>{player.name}</b><button type="button" onClick={switchPlayer}>Switch player</button></div>
@@ -396,8 +425,8 @@ export function QuestView() {
       </header>
 
       <section className="quest-progress-shell section-shell">
-        <div className="quest-progress-copy"><small>YOUR PROGRESS</small><strong>{playerCompletions.size} <i>/</i> {questTasks.length}</strong><span>challenges completed</span></div>
-        <div className="quest-progress-track" aria-label={`${playerCompletions.size} of ${questTasks.length} challenges completed`}><i style={{ width: `${(playerCompletions.size / questTasks.length) * 100}%` }} /></div>
+        <div className="quest-progress-copy"><small>YOUR PROGRESS</small><strong>{completedCount} <i>/</i> {playerTasks.length}</strong><span>challenges completed</span></div>
+        <div className="quest-progress-track" aria-label={`${completedCount} of ${playerTasks.length} challenges completed`}><i style={{ width: `${(completedCount / playerTasks.length) * 100}%` }} /></div>
         <div className="quest-tabs" role="tablist" aria-label="Quest views"><button className={mode === "board" ? "active" : ""} type="button" onClick={() => setMode("board")}>Quest Log</button><button className={mode === "gallery" ? "active" : ""} type="button" onClick={() => setMode("gallery")}>Glow Reel <span>{completions.length}</span></button></div>
       </section>
 
@@ -405,14 +434,15 @@ export function QuestView() {
         {loadError && <div className="quest-load-error" role="alert">{loadError} <button type="button" onClick={() => window.location.reload()}>Try again</button></div>}
         {mode === "board" ? (
           <div className="quest-board">
-            {questTasks.map((task, index) => {
+            {playerTasks.map((task, index) => {
               const completion = playerCompletions.get(task.id);
               return (
-                <button className={`quest-task ${completion ? "complete" : ""}`} type="button" key={task.id} disabled={loading} onClick={() => completion ? setLightbox(completion) : setActiveTask(task)}>
+                <button className={`quest-task ${completion ? "complete" : ""}`} type="button" key={task.id} disabled={loading} onClick={() => setActiveTask(task)}>
                   <span className="quest-task-number">{String(index + 1).padStart(2, "0")}</span>
-                  <small>{completion ? "COMPLETED · PHOTO SAVED" : task.category ?? "CHALLENGE PLACEHOLDER"}</small>
+                  <small>{task.category ?? "CHALLENGE"}{completion ? " · COMPLETE ✓" : ""}</small>
+                  {completion && <img className="quest-task-thumbnail" src={completion.thumbnailUrl || completion.photoUrl} alt="Your challenge cover" loading="lazy" />}
                   <h2>{task.title}</h2><p>{task.description}</p>
-                  <i>{completion ? "View memory ↗" : "Add proof →"}</i>
+                  <i>{completion ? `Manage photos · ${completion.photos?.length || 1}/3 →` : "Add photos →"}</i>
                 </button>
               );
             })}
@@ -420,7 +450,7 @@ export function QuestView() {
         ) : <GlowReel completions={completions} onOpen={setLightbox} />}
       </section>
 
-      {activeTask && <ProofComposer task={activeTask} player={player} onClose={() => setActiveTask(null)} onSaved={saved} />}
+      {activeTask && <ProofComposer task={activeTask} player={player} completion={playerCompletions.get(activeTask.id)} onClose={() => setActiveTask(null)} onSaved={saved} />}
       {lightbox && <MemoryLightbox key={lightbox.id} completion={lightbox} position={lightboxIndex + 1} total={completions.length} onClose={() => setLightbox(null)} onPrevious={showPreviousMemory} onNext={showNextMemory} />}
     </div>
   );

@@ -61,3 +61,15 @@ export const hangoutRoundPlayers = sqliteTable("hangout_round_players", {
   primaryKey({ columns: [table.roundId, table.playerId] }),
   index("idx_hangout_round_players_round").on(table.roundId),
 ]);
+
+export const questPhotos = sqliteTable("quest_photos", {
+  id: text("id").primaryKey(),
+  completionId: text("completion_id").notNull().references(() => questCompletions.id, { onDelete: "cascade" }),
+  position: integer("position").notNull(),
+  objectKey: text("object_key").notNull().unique(),
+  thumbnailKey: text("thumbnail_key"),
+  fileName: text("file_name").notNull(),
+  contentType: text("content_type").notNull(),
+  byteSize: integer("byte_size").notNull(),
+  createdAt: text("created_at").notNull(),
+}, t => [uniqueIndex("idx_quest_photos_slot").on(t.completionId, t.position)]);

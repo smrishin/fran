@@ -6,12 +6,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   const { id } = await context.params;
   const { getQuestPhoto } = await import("../../../../../lib/quest-storage");
-  const result = await getQuestPhoto(id);
+  const result = await getQuestPhoto(id, new URL(request.url).searchParams.get("thumbnail") === "1");
   if (!result) return new Response("Photo not found.", { status: 404 });
 
   const headers = new Headers();
   result.object.writeHttpMetadata(headers);
-  headers.set("Cache-Control", "private, max-age=3600");
+  headers.set("Cache-Control", "private, no-cache");
   headers.set("Content-Disposition", "inline");
   return new Response(result.object.body, { headers });
 }

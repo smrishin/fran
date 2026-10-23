@@ -839,3 +839,24 @@ h1 em, h2 em { font-family: Georgia, serif; color: var(--coral); font-weight: 40
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; }
 }
+
+/* Quest photos: a small album for each adventure. */
+.quest-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.quest-task-thumbnail { width: 100%; height: 145px; object-fit: cover; border-radius: 4px; margin: 12px 0 3px; }
+.quest-photo-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.quest-photo-slot { min-width: 0; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.quest-photo-slot > img { width: 100%; height: 125px; object-fit: cover; display: block; }
+.quest-photo-slot > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 8px 3px; }
+.quest-photo-slot button, .quest-upload-item button { border: 0; background: transparent; color: var(--coral); cursor: pointer; font-size: 10px; padding: 5px; text-decoration: underline; }
+.quest-photo-slot.empty { min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-style: dashed; color: var(--muted); }
+.quest-photo-slot.empty span { font-size: 25px; }
+.quest-photo-slot.empty small { font-size: 10px; }
+.quest-upload-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; padding: 9px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.quest-upload-item.error { color: #b34436; }
+.quest-upload-item.saved { color: #32644e; }
+.quest-memory-count { position: absolute; top: 10px; right: 10px; z-index: 2; background: var(--paper); color: var(--ink); border-radius: 20px; padding: 6px 9px; font-size: 10px; }
+.quest-lightbox-thumbnails { display: flex; justify-content: center; gap: 8px; padding: 10px 16px; }
+.quest-lightbox-thumbnails button { width: 48px; height: 48px; border: 2px solid transparent; padding: 0; background: transparent; opacity: .6; cursor: pointer; border-radius: 4px; overflow: hidden; }
+.quest-lightbox-thumbnails button.active { border-color: var(--coral); opacity: 1; }
+.quest-lightbox-thumbnails img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 700px) { .quest-board { grid-template-columns: 1fr; } .quest-photo-slot > img { height: 100px; } .quest-photo-slot.empty { min-height: 145px; } }
