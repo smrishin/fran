@@ -154,7 +154,9 @@ function ProofComposer({ task, player, completion, onClose, onSaved }: {
   );
 }
 
-function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNext }: {
+function MemoryLightbox({ completion, position, total, playerId, onDeleted, onClose, onPrevious, onNext }: {
+  playerId: string;
+  onDeleted: (completion: QuestCompletion | null, taskId: string) => void;
   completion: QuestCompletion;
   position: number;
   total: number;
@@ -163,6 +165,9 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
   onNext: () => void;
 }) {
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const photos = completion.photos?.length ? completion.photos : [{ id: completion.id, photoUrl: completion.photoUrl, thumbnailUrl: completion.thumbnailUrl }];
   const selectedPhoto = photos[Math.min(photoIndex, photos.length - 1)];
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -171,29 +176,50 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
   const touchStart = useRef<number | null>(null);
   const taskTitle = questTasks.find((task) => task.id === completion.taskId)?.title ?? "Quest memory";
 
-  useModalDismiss(onClose);
+  const dismiss = () => { if (!deleting) onClose(); };
+  useModalDismiss(dismiss, !deleting);
 
   useEffect(() => {
     const navigateWithKeyboard = (event: KeyboardEvent) => {
+      if (deleting) return;
       if (event.key === "ArrowLeft") onPrevious();
       if (event.key === "ArrowRight") onNext();
     };
 
     window.addEventListener("keydown", navigateWithKeyboard);
     return () => window.removeEventListener("keydown", navigateWithKeyboard);
-  }, [onNext, onPrevious]);
+  }, [onNext, onPrevious, deleting]);
 
   const beginSwipe = (event: TouchEvent<HTMLDivElement>) => {
     touchStart.current = event.changedTouches[0]?.clientX ?? null;
   };
 
   const finishSwipe = (event: TouchEvent<HTMLDivElement>) => {
-    if (touchStart.current === null) return;
+    if (deleting || touchStart.current === null) return;
     const distance = (event.changedTouches[0]?.clientX ?? touchStart.current) - touchStart.current;
     touchStart.current = null;
     if (Math.abs(distance) < 54) return;
     if (distance > 0) onPrevious();
     else onNext();
+  };
+
+  const deletePhoto = async () => {
+    if (completion.playerId !== playerId || deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const response = await fetch("/api/quest/proof", {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId: completion.taskId, playerId, photoId: selectedPhoto.id }),
+      });
+      const result = await response.json() as { completion: QuestCompletion | null; error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Could not delete photo.");
+      onDeleted(result.completion, completion.taskId);
+      setPhotoIndex(0);
+      setConfirmDelete(false);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "Could not delete photo.");
+    } finally { setDeleting(false); }
   };
 
   const savePhoto = async () => {
@@ -248,15 +274,15 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
   return createPortal(
     <div className="quest-lightbox" role="dialog" aria-modal="true" aria-label={`Quest memory: ${taskTitle} by ${completion.playerName}`}>
       <div className="quest-lightbox-backdrop" aria-hidden="true"><img src={selectedPhoto.photoUrl} alt="" /></div>
-      <button className="quest-lightbox-dismiss" type="button" aria-label="Close memory" onClick={onClose} />
+      <button className="quest-lightbox-dismiss" type="button" aria-label="Close memory" onClick={dismiss} />
       <article className="quest-lightbox-frame">
-        <button className="quest-lightbox-close" type="button" aria-label="Close photo" onClick={onClose}>×</button>
+        <button className="quest-lightbox-close" type="button" aria-label="Close photo" onClick={dismiss}>×</button>
         <div className="quest-lightbox-photo" onTouchStart={beginSwipe} onTouchEnd={finishSwipe}>
-          <button className="quest-lightbox-photo-dismiss" type="button" aria-label="Close memory" onClick={onClose} />
+          <button className="quest-lightbox-photo-dismiss" type="button" aria-label="Close memory" onClick={dismiss} />
           <img src={selectedPhoto.photoUrl} alt={`${completion.playerName}'s Quest memory`} />
           {total > 1 && <div className="quest-lightbox-side-nav" aria-label="Memory navigation">
-            <button type="button" aria-label="Previous memory" onClick={onPrevious}>←</button>
-            <button type="button" aria-label="Next memory" onClick={onNext}>→</button>
+            <button type="button" aria-label="Previous memory" disabled={deleting} onClick={onPrevious}>←</button>
+            <button type="button" aria-label="Next memory" disabled={deleting} onClick={onNext}>→</button>
           </div>}
           {total > 1 && <span className="quest-lightbox-swipe-hint" aria-hidden="true">← swipe to browse →</span>}
         </div>
@@ -264,7 +290,7 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
           <button className="quest-lightbox-details-toggle" type="button" aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>
             <span aria-hidden="true" /><b>Memory details</b><i aria-hidden="true">{detailsOpen ? "−" : "+"}</i>
           </button>
-          <div className="quest-lightbox-thumbnails">{photos.map((photo, index) => <button type="button" key={photo.id} className={index === photoIndex ? "active" : ""} aria-label={`View photo ${index + 1}`} aria-pressed={index === photoIndex} onClick={() => { setPhotoIndex(index); setSaveStatus("idle"); setSaveMessage(""); }}><img src={photo.thumbnailUrl || photo.photoUrl} alt="" /></button>)}</div>
+          <div className="quest-lightbox-thumbnails">{photos.map((photo, index) => <button type="button" key={photo.id} disabled={deleting} className={index === photoIndex ? "active" : ""} aria-label={`View photo ${index + 1}`} aria-pressed={index === photoIndex} onClick={() => { setConfirmDelete(false); setDeleteError(""); setPhotoIndex(index); setSaveStatus("idle"); setSaveMessage(""); }}><img src={photo.thumbnailUrl || photo.photoUrl} alt="" /></button>)}</div>
           <div className="quest-lightbox-details-content">
             <div className="quest-lightbox-copy">
               <small>QUEST MEMORY · {completion.playerName}</small>
@@ -273,9 +299,17 @@ function MemoryLightbox({ completion, position, total, onClose, onPrevious, onNe
             </div>
             <div className="quest-lightbox-position" aria-live="polite"><span>{String(position).padStart(2, "0")}</span><i>/</i>{String(total).padStart(2, "0")}</div>
             <div className="quest-lightbox-actions">
-              <button type="button" onClick={savePhoto} disabled={saveStatus === "saving"}>
+              <button type="button" onClick={savePhoto} disabled={deleting || saveStatus === "saving"}>
                 {saveStatus === "saving" ? "Preparing photo…" : "Save photo ↓"}
               </button>
+              {completion.playerId === playerId && (
+                confirmDelete ? <div className="quest-delete-confirm" role="group" aria-label="Confirm photo deletion">
+                  <p>Delete this photo permanently?{photos.length === 1 ? " This challenge will return to incomplete." : " Your other photos will stay."}</p>
+                  <button type="button" disabled={deleting} onClick={() => void deletePhoto()}>{deleting ? "Deleting…" : "Yes, delete photo"}</button>
+                  <button type="button" disabled={deleting} onClick={() => setConfirmDelete(false)}>Cancel</button>
+                </div> : <button type="button" onClick={() => setConfirmDelete(true)}>Delete photo</button>
+              )}
+              {deleteError && <span role="alert">{deleteError}</span>}
               {saveStatus === "idle" && <small>On iPhone, choose “Save Image” in the share sheet.</small>}
               {saveMessage && <span className={saveStatus} role={saveStatus === "error" ? "alert" : "status"}>{saveMessage}</span>}
             </div>
@@ -451,7 +485,7 @@ export function QuestView() {
       </section>
 
       {activeTask && <ProofComposer task={activeTask} player={player} completion={playerCompletions.get(activeTask.id)} onClose={() => setActiveTask(null)} onSaved={saved} />}
-      {lightbox && <MemoryLightbox key={lightbox.id} completion={lightbox} position={lightboxIndex + 1} total={completions.length} onClose={() => setLightbox(null)} onPrevious={showPreviousMemory} onNext={showNextMemory} />}
+      {lightbox && <MemoryLightbox key={lightbox.id} completion={lightbox} playerId={player.id} onDeleted={(completion, taskId) => { saved(completion, taskId); setLightbox(completion); }} position={lightboxIndex + 1} total={completions.length} onClose={() => setLightbox(null)} onPrevious={showPreviousMemory} onNext={showNextMemory} />}
     </div>
   );
 }

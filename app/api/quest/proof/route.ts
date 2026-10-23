@@ -29,7 +29,7 @@ export async function DELETE(request:Request) {
  if(!await authorized(request)) return Response.json({error:'Campfire Code required.'},{status:401});
  try {
  const {taskId,playerId,photoId}=await request.json() as Record<string,string>;
- if(!guests.some(g=>g.id===playerId)||!questsForPlayer(playerId).some(t=>t.id===taskId)||typeof photoId!=='string') return Response.json({error:'Choose a valid player and assigned challenge.'},{status:400});
+ if(!guests.some(g=>g.id===playerId)||typeof taskId!=='string'||typeof photoId!=='string') return Response.json({error:'Choose a valid player and assigned challenge.'},{status:400});
  const {removeQuestPhoto}=await import('../../../../lib/quest-storage');return Response.json({completion:await removeQuestPhoto(taskId,playerId,photoId)});
  }catch(error){return failure(error);}
 }
